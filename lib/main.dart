@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tialink/pages/login_page.dart';
+import 'package:tialink/pages/ota_page.dart';
 import 'package:tialink/pages/welcome_page.dart';
 
 void main() async {
@@ -49,6 +50,9 @@ class _TiaLinkState extends State<TiaLink> {
           }
         },
       ),
+      routes: {
+        "/ota": (context) => OtaVerification()
+      },
     );
   }
 
