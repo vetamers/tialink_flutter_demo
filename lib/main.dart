@@ -1,12 +1,18 @@
+import 'package:auth/auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:tialink/auth/phone/phone_verification_bloc.dart';
+import 'package:tialink/bloc_observer.dart';
 import 'package:tialink/pages/login_page.dart';
 import 'package:tialink/pages/ota_page.dart';
 import 'package:tialink/pages/welcome_page.dart';
 
 void main() async {
   await Hive.initFlutter();
-  runApp(TiaLink());
+  Authenticator.instance.initAuthenticationPackage();
+  BlocOverrides.runZoned(() => runApp(TiaLink()),
+      blocObserver: AppBlocObserver());
 }
 
 class TiaLink extends StatefulWidget {
@@ -31,14 +37,16 @@ class _TiaLinkState extends State<TiaLink> {
                 body: Center(
                   child: Container(
                     padding: EdgeInsets.all(35),
-                    child: Text(snapshot.error.toString(),
-                      style: TextStyle(color: Colors.white, fontSize: 20),),
+                    child: Text(
+                      snapshot.error.toString(),
+                      style: TextStyle(color: Colors.white, fontSize: 20),
+                    ),
                   ),
                 ),
               );
             } else {
               if (Hive.box("app").get("isFirstLaunch", defaultValue: true)) {
-                return WelcomePage((){
+                return WelcomePage(() {
                   setState(() {});
                 });
               } else {
@@ -51,7 +59,9 @@ class _TiaLinkState extends State<TiaLink> {
         },
       ),
       routes: {
-        "/ota": (context) => OtaVerification()
+        "/ota": (context) => BlocProvider(
+            create: (context) => PhoneVerificationBloc(),
+            child: OtaVerification())
       },
     );
   }
@@ -62,4 +72,3 @@ class _TiaLinkState extends State<TiaLink> {
     super.dispose();
   }
 }
-

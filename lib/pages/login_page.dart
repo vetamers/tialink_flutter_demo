@@ -144,10 +144,7 @@ class _LoginPageState extends State<LoginPage> {
                                   TextButton(onPressed: () {
                                     //TODO: Request code to server
                                     Navigator.pop(context);
-                                    Navigator.pushNamed(context, "/ota");
-                                    setState(() {
-                                    //  _isInProgress = true;
-                                    });
+                                    Navigator.pushNamed(context, "/ota",arguments: {"phone":_firstController.text});
                                   }, child: const Text("Yes")),
 
                                 ],
