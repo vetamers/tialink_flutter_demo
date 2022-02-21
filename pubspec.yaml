@@ -42,10 +42,12 @@ dependencies:
   flutter_bloc: ^8.0.1
   equatable: ^2.0.3
   otp_autofill: ^2.1.0
+  json_annotation: ^4.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  json_serializable: ^6.0.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

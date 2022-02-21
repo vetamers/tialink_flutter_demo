@@ -1,30 +1,47 @@
+import 'dart:convert';
+
 import 'package:auth/core/credential.dart';
 import 'package:auth/providers/phone_auth.dart';
 import 'package:equatable/equatable.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-class PhoneVerificationRequest extends Equatable {
-  final String id;
-  final String resendToken;
-  final int expireIn;
+part 'phone_verification.g.dart';
 
-  const PhoneVerificationRequest(this.id, this.resendToken, this.expireIn);
+@JsonSerializable()
+class PhoneVerificationRequest{
+  late String id;
+  @JsonKey(name: "resend_token")
+  late String resendToken;
 
-  factory PhoneVerificationRequest.fromJson(Map<String, dynamic> json) {
-    return PhoneVerificationRequest(
-        json["id"], json["resend_token"], json["expire_in"]);
-  }
+  @JsonKey(name: "expire_in")
+  late int expireIn;
 
-  @override
-  List<Object?> get props => [id, resendToken, expireIn];
+  PhoneVerificationRequest();
+
+  factory PhoneVerificationRequest.fromJson(Map<String,dynamic> json) => _$PhoneVerificationRequestFromJson(json);
 }
 
+@JsonSerializable(createFactory: false,ignoreUnannotated: true)
 class PhoneAuthCredential extends AuthCredential {
-  final String credentialToken;
-  final int expireIn;
 
-  const PhoneAuthCredential(this.credentialToken, this.expireIn) : super(PhoneAuthProvider.providerId,PhoneAuthProvider.signInMethod);
+  final String verificationId;
+  final String smsCode;
 
-  factory PhoneAuthCredential.fromJson(Map<String, dynamic> json) {
-    return PhoneAuthCredential(json["credential"], json["expire_in"]);
-  }
+  PhoneAuthCredential(this.verificationId,this.smsCode);
+
+  @JsonKey()
+  @override
+  String get providerId => PhoneAuthProvider.providerId;
+
+  @JsonKey()
+  @override
+  String get signInMethod => PhoneAuthProvider.signInMethod;
+
+  @JsonKey()
+  @override
+  Map<String, String> get payload =>
+      {"verificationId": verificationId, "smsCode": smsCode};
+
+  Map<String,dynamic> toJson() => _$PhoneAuthCredentialToJson(this);
+
 }

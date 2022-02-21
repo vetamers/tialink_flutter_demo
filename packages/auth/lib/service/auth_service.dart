@@ -4,18 +4,17 @@ import 'dart:io';
 import 'package:auth/core/api_error.dart';
 import 'package:auth/core/credential.dart';
 import 'package:auth/core/network.dart';
-import 'package:http/http.dart';
 
 class AuthService {
-  final String _url = getAPIUrl() + "auth/";
+  final HttpHelper _httpHelper = HttpHelper("auth/");
 
-  Future<String> getToken(AuthCredential credential) async{
-      Response response = await postJson(_url + "token", {"credential":credential.signInMethod,"device_name":"TEST"});
+  Future<String> getToken(AuthCredential credential) async {
+    Response response = await _httpHelper.post("token", <String,dynamic>{"credential":credential.toJson(),"tokenName":"Dart"});
 
-      if (response.statusCode == HttpStatus.ok){
-        return jsonDecode(response.body)["token"].toString();
-      }else{
-        return Future.error(APIException(response.statusCode,response.body));
-      }
+    if (response.statusCode == HttpStatus.ok) {
+      return jsonDecode(response.body)["token"].toString();
+    } else {
+      return Future.error(APIException(response.statusCode, response.body));
+    }
   }
 }

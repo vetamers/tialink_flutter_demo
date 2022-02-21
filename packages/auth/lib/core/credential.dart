@@ -1,12 +1,12 @@
 import 'package:equatable/equatable.dart';
 
-class AuthCredential extends Equatable {
-  final String providerId;
-  final String signInMethod;
-
-  const AuthCredential(this.providerId, this.signInMethod);
+abstract class AuthCredential extends Equatable {
+  String get providerId;
+  String get signInMethod;
+  Map<String,dynamic> get payload;
 
   @override
   List<Object?> get props => [providerId, signInMethod];
-}
 
+  Map<String,dynamic> toJson();
+}

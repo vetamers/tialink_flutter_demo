@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:auth/auth.dart';
 import 'package:auth/core/api_error.dart';
+import 'package:auth/model/api_result.dart';
+import 'package:auth/model/user.dart';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
@@ -31,10 +33,10 @@ class PhoneVerificationBloc
   FutureOr<void> _tryCode(PhoneVerificationTryCodeEvent event,
       Emitter<PhoneVerificationState> emit) async {
     try {
-      emit(PhoneVerificationCodeValid(
-          await _provider.getCredential(event.verificationId, event.smsCode)));
+      var phoneCredential = _provider.getCredential(event.verificationId, event.smsCode);
+      emit(PhoneVerificationDone(await Authenticator.instance.signInWithCredential(phoneCredential)));
     } on APIException catch (e) {
-      emit(PhoneVerificationInvalidCode(e));
+      emit(PhoneVerificationInvalidCredential(e));
     }
   }
 }

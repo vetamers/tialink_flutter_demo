@@ -1,28 +1,24 @@
+import 'dart:convert';
+
+import 'package:auth/service/user_service.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hive/hive.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 part 'user.g.dart';
 
-@HiveType(typeId: 0)
-class User extends Equatable {
-  @HiveField(0)
+@JsonSerializable()
+class User{
   late String id;
-
-  @HiveField(1)
-  late String name;
-
-  @HiveField(2)
+  String? name;
   String? email;
-
-  @HiveField(3)
   String? phone;
-
-  @HiveField(4)
-  late List<String> authProviders;
+  DateTime? emailVerifiedAt;
+  DateTime? phoneVerifiedAt;
+  late List<String> providers;
 
   User();
 
-  @override
-  List<Object?> get props => [id];
-
+  factory User.fromJson(Map<String,dynamic> json) => _$UserFromJson(json);
+  Map<String,dynamic> toJson() => _$UserToJson(this);
 }

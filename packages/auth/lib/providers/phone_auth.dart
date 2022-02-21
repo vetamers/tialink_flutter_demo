@@ -16,7 +16,6 @@ class PhoneAuthProvider {
     return _service.requestVerify(phone);
   }
 
-  Future<PhoneAuthCredential> getCredential(String verificationId,String smsCode) async{
-    return _service.getCredential(verificationId, int.parse(smsCode));
-  }
+   PhoneAuthCredential getCredential(String verificationId, String smdCode) =>
+      PhoneAuthCredential(verificationId, smdCode);
 }

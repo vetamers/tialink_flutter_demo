@@ -1,21 +1,28 @@
 import 'dart:convert';
 
+import 'package:auth/model/user.dart';
 import 'package:equatable/equatable.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-class APIResult extends Equatable {
-  final bool isSuccessful;
-  final String? message;
+part 'api_result.g.dart';
 
-  APIResult(this.isSuccessful, this.message);
 
-  factory APIResult.fromJson(Map<String, dynamic> json) {
-    return APIResult(json["ok"], json["message"]);
-  }
+@JsonSerializable(createToJson: false)
+class APIResult{
+  @JsonKey(name: "ok")
+  late bool isSuccessful;
+  String? message;
 
-  factory APIResult.fromJsonString(String json) {
-    return APIResult.fromJson(jsonDecode(json));
-  }
+  APIResult();
+
+  factory APIResult.fromJson(Map<String, dynamic> json) => _$APIResultFromJson(json);
+}
+
+class AuthResult extends Equatable {
+  final User user;
+
+  const AuthResult(this.user);
 
   @override
-  List<Object?> get props => [isSuccessful, message];
+  List<Object?> get props => [user];
 }

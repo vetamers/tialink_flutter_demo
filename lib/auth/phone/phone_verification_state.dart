@@ -18,15 +18,21 @@ class PhoneVerificationRequestError extends PhoneVerificationState{
   PhoneVerificationRequestError(this.error, this.event);
 }
 
-class PhoneVerificationCodeValid extends PhoneVerificationState {
+class PhoneVerificationTryCredential extends PhoneVerificationState{
   final PhoneAuthCredential credential;
 
-  PhoneVerificationCodeValid(this.credential);
+  PhoneVerificationTryCredential(this.credential);
 }
 
-class PhoneVerificationInvalidCode extends PhoneVerificationState {
+class PhoneVerificationInvalidCredential extends PhoneVerificationState{
   final APIException error;
 
-  PhoneVerificationInvalidCode(this.error);
+  PhoneVerificationInvalidCredential(this.error);
+}
+
+class PhoneVerificationDone extends PhoneVerificationState {
+  final AuthResult authResult;
+
+  PhoneVerificationDone(this.authResult);
 }
 

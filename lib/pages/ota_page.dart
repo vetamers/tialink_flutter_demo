@@ -60,22 +60,15 @@ class OtaVerification extends StatelessWidget {
               return progressbar();
             } else if (state is PhoneVerificationRequested) {
               _startLisenteForCode();
-              args.addAll({
-                "verificationId": state.verificationRequest.id,
-                "resendToken": state.verificationRequest.resendToken
-              });
               return mainScreen(context, args);
-            } else if (state is PhoneVerificationInvalidCode) {
+            } else if (state is PhoneVerificationInvalidCredential) {
               WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(state.error.apiResultError!.message!)));
               });
               return mainScreen(context, args);
-            } else if (state is PhoneVerificationCodeValid) {
-              return AlertDialog(
-                title: Text("Verification successful"),
-                content: Text(state.toString()),
-              );
+            } else if (state is PhoneVerificationDone) {
+              return Text(state.authResult.user.id);
             } else {
               return Text(state.toString());
             }
@@ -155,7 +148,7 @@ class OtaVerification extends StatelessWidget {
               submittedFieldDecoration: pinPutDecoration,
               onSubmit: (s) {
                 context.read<PhoneVerificationBloc>().add(
-                    PhoneVerificationTryCodeEvent(args["verificationId"], s));
+                    PhoneVerificationTryCodeEvent((context.read<PhoneVerificationBloc>().state as PhoneVerificationRequested).verificationRequest.id, s));
               },
             ),
           ),
