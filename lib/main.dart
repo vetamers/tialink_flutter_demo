@@ -7,6 +7,7 @@ import 'package:tialink/bloc_observer.dart';
 import 'package:tialink/pages/login_page.dart';
 import 'package:tialink/pages/ota_page.dart';
 import 'package:tialink/pages/welcome_page.dart';
+import 'package:tialink/wizard/view/wizard_page.dart';
 
 void main() async {
   await Hive.initFlutter();
@@ -50,7 +51,11 @@ class _TiaLinkState extends State<TiaLink> {
                   setState(() {});
                 });
               } else {
-                return LoginPage();
+                if (Hive.box("auth").containsKey("token")){
+                  return WizardPage();
+                }else{
+                  return LoginPage();
+                }
               }
             }
           } else {
@@ -61,7 +66,10 @@ class _TiaLinkState extends State<TiaLink> {
       routes: {
         "/ota": (context) => BlocProvider(
             create: (context) => PhoneVerificationBloc(),
-            child: OtaVerification())
+            child: OtaVerification(() {
+              setState(() {});
+            },)),
+        WizardPage.routeName: (context) => WizardPage()
       },
     );
   }

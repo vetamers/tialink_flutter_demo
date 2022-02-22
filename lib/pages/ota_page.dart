@@ -5,11 +5,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:otp_autofill/otp_autofill.dart';
 import 'package:pinput/pin_put/pin_put.dart';
+import 'package:tialink/wizard/view/wizard_page.dart';
 
 import '../auth/phone/phone_verification_bloc.dart';
 
 class OtaVerification extends StatelessWidget {
-  OtaVerification({Key? key}) : super(key: key);
+  final VoidCallback onVerificationComplete;
+
+  OtaVerification(this.onVerificationComplete, {Key? key}) : super(key: key);
 
   final BoxDecoration pinPutDecoration = const BoxDecoration(
       color: Color(0xFFF8F7FB),
@@ -59,6 +62,7 @@ class OtaVerification extends StatelessWidget {
                   .add(PhoneVerificationRequestEvent("0${args["phone"]}"));
               return progressbar();
             } else if (state is PhoneVerificationRequested) {
+              args.addAll({"verificationId": state.verificationRequest.id});
               _startLisenteForCode();
               return mainScreen(context, args);
             } else if (state is PhoneVerificationInvalidCredential) {
@@ -68,7 +72,13 @@ class OtaVerification extends StatelessWidget {
               });
               return mainScreen(context, args);
             } else if (state is PhoneVerificationDone) {
-              return Text(state.authResult.user.id);
+              Hive.box("app").put("isWizardComplete", false);
+              WidgetsBinding.instance?.addPostFrameCallback(
+                (timeStamp) {
+                  Navigator.pushNamed(context, WizardPage.routeName);
+                },
+              );
+              return progressbar();
             } else {
               return Text(state.toString());
             }
@@ -148,7 +158,7 @@ class OtaVerification extends StatelessWidget {
               submittedFieldDecoration: pinPutDecoration,
               onSubmit: (s) {
                 context.read<PhoneVerificationBloc>().add(
-                    PhoneVerificationTryCodeEvent((context.read<PhoneVerificationBloc>().state as PhoneVerificationRequested).verificationRequest.id, s));
+                    PhoneVerificationTryCodeEvent(args["verificationId"], s));
               },
             ),
           ),
