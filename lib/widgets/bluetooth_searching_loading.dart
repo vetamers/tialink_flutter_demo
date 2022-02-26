@@ -1,34 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class BluetoothSearchingLoading extends StatefulWidget {
-  const BluetoothSearchingLoading({Key? key}) : super(key: key);
+class BluetoothSearchingLoading extends StatelessWidget {
+  final bool showAnimation;
+  final IconData iconData;
+  final VoidCallback? onClick;
 
-  @override
-  _BluetoothSearchingLoadingState createState() =>
-      _BluetoothSearchingLoadingState();
-}
+  const BluetoothSearchingLoading(
+      {Key? key,
+      this.onClick,
+      this.showAnimation = true,
+      this.iconData = Icons.bluetooth_searching_rounded})
+      : super(key: key);
 
-class _BluetoothSearchingLoadingState extends State<BluetoothSearchingLoading> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.maxFinite,
       height: 300,
       child: Stack(
-        children: const [
-          SpinKitPulse(
-            color: Colors.lightBlue,
-            size: 300,
-          ),
+        children: [
+          showAnimation ? SpinKitPulse(color: Colors.lightBlue, size: 300,) : SizedBox(),
           Align(
               alignment: Alignment.center,
               child: FloatingActionButton.large(
-                onPressed: null,
-                child: Icon(Icons.bluetooth_rounded),
+                onPressed: !showAnimation ? onClick : null ,
+                child: Icon(iconData),
               ))
         ],
       ),
     );
+
   }
 }

@@ -1,12 +1,17 @@
+
+import 'dart:async';
 import 'dart:developer';
 
-import 'package:auth/core/network.dart';
-import 'package:cool_stepper/cool_stepper.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart' as bluetooth;
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:im_stepper/stepper.dart';
+import 'package:tialink/bluetooth/bluetooth_bloc.dart';
 import 'package:tialink/wizard/bloc/search/search_device_bloc.dart';
+import 'package:tialink/wizard/view/config_remote_view.dart';
+import 'package:tialink/wizard/view/search_device_view.dart';
+import 'package:tialink/wizard/view/select_role_view.dart';
 
 class WizardPage extends StatefulWidget {
   const WizardPage({Key? key}) : super(key: key);
@@ -18,166 +23,112 @@ class WizardPage extends StatefulWidget {
 }
 
 class _WizardPageState extends State<WizardPage> {
-  String roleValue = "slave";
+  Box? _box;
+  final stepsName = ["Select Role","Connecting to device","Setup remotes"];
+  int currentStep = 2;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Wizard"),
-        centerTitle: true,
-      ),
-      body: Container(
-        child: CoolStepper(onCompleted: () {}, steps: [searchingDevice()],contentPadding: EdgeInsets.all(10)),
-      ),
-    );
-  }
-
-  CoolStep selectRule() {
-    final segmentWidgets = {
-      "master": Container(
-        child: Text("Master"),
-        padding: EdgeInsets.all(20),
-      ),
-      "slave": Text("Slave")
-    };
-
-    return CoolStep(
-        title: "Role",
-        subtitle: "Select your role",
-        content: Container(
-          height: 500,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => BluetoothBloc(bluetooth.FlutterBluetoothSerial.instance),),
+          BlocProvider(create: (context) => SearchDeviceBloc(context.read()),),
+        ],
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text("Setup"),
+            centerTitle: true,
+          ),
+          body: Column(
             children: [
-              Text(roleValue == "slave"
-                  ? "I slave and i want to get access from master"
-                  : "I master and device owner"),
-              SizedBox(
-                height: 20,
+              IconStepper(
+                activeStep: currentStep,
+                icons: const [
+                  Icon(Icons.account_circle,color: Colors.white,),
+                  Icon(Icons.bluetooth,color: Colors.white,),
+                  Icon(Icons.settings_remote_rounded,color: Colors.white,),
+                ],
+                enableNextPreviousButtons: false,
+                enableStepTapping: false,
+                activeStepColor: Colors.blue
               ),
-              SizedBox(
-                width: double.maxFinite,
-                child: CupertinoSegmentedControl(
-                  groupValue: roleValue,
-                  children: segmentWidgets,
-                  onValueChanged: (v) {
-                    setState(() {
-                      roleValue = v.toString();
-                    });
+              SizedBox(height: 20,),
+              Column(
+                children: [
+                  Text("Step ${currentStep + 1}"),
+                  Text(stepsName[currentStep],style: Theme.of(context).textTheme.headline6,)
+                ],
+              ),
+              Expanded(
+                child: FutureBuilder(
+                  future: _box == null ? _initStorage() : Future.value(),
+                  builder: (context,snapshot){
+                    return snapshot.connectionState == ConnectionState.done ? _getStep() : SizedBox();
                   },
                 ),
               )
             ],
           ),
-        ),
-        validation: () {
-          return null;
-        });
-  }
-
-  CoolStep searchingDevice() {
-    return CoolStep(
-        title: "Finding device",
-        subtitle: "Searching for device for first setup",
-        content: BlocProvider(
-          create: (context) => SearchDeviceBloc(),
-          child: Container(child: const SearchingDeviceView(),height: MediaQuery.of(context).size.height / 2,),
-        ),
-        validation: null);
-  }
-}
-
-class SearchingDeviceView extends StatefulWidget {
-  const SearchingDeviceView({ Key? key }) : super(key: key);
-
-  @override
-  _SearchingDeviceViewState createState() => _SearchingDeviceViewState();
-}
-
-class _SearchingDeviceViewState extends State<SearchingDeviceView> with WidgetsBindingObserver {
-  late var lifeCycleLastState;
-
-  @override
-  void initState() {
-    context.read<SearchDeviceBloc>().add(SearchDeviceEvent(SearchDeviceEvents.checkPermission));
-    WidgetsBinding.instance?.addObserver(this);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance?.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<SearchDeviceBloc, SearchDeviceState>(
-      builder: (context, state) {
-        switch (state.status){
-          case SearchDeviceStatus.initial:
-            return _progressBar();
-          case SearchDeviceStatus.permissionNeeded:
-            return _requestPermissionDialog();
-          case SearchDeviceStatus.permissionShowRequestRationale:
-            return _requestPermissionDialog();
-          case SearchDeviceStatus.permissionDenied:
-            return _permissionDenied();
-          case SearchDeviceStatus.permissionAccept:
-            return _progressBar();
-          case SearchDeviceStatus.permissionPermanentlyDenied:
-            return _permissionDenied(true);
-        }
-      },
+          floatingActionButton: Container(
+            padding: EdgeInsets.only(left: 25),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                currentStep != 0
+                    ? FloatingActionButton.extended(
+                        onPressed: () {
+                          setState(() {
+                            currentStep--;
+                          });
+                        },
+                        label: Text("Previous"),
+                        icon: Icon(Icons.navigate_before_rounded),
+                      )
+                    : SizedBox(),
+                currentStep == 0 ? FloatingActionButton.extended(
+                    onPressed: () {
+                      switch (currentStep) {
+                        case 0:
+                          setState(() {
+                            currentStep++;
+                          });
+                      }
+                    },
+                    icon: Icon(Icons.navigate_next_rounded),
+                    label: Text("Next")) : SizedBox(),
+              ],
+            ),
+          ),
+        )
     );
   }
 
-  Widget _requestPermissionDialog() {
-    return AlertDialog(
-      title: Text("Permission Needed"),
-      content: Text("We need location permission for searching your nearby bluetooth devices"),
-      actions: [
-        TextButton(onPressed: () {
-          context.read<SearchDeviceBloc>().add(const SearchDeviceEvent(SearchDeviceEvents.showPermissionDialog));
-        }, child: Text("OK"))
-      ]
-    );
-  }
-
-  Widget _permissionDenied([bool isPermanentlyDenied = false]) {
-    WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(isPermanentlyDenied
-            ? "Permission denied permanently"
-            : "Permission Denied"),
-        backgroundColor: Theme.of(context).errorColor,
-      ));
-    });
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(isPermanentlyDenied ? "We need location permission to continue.\nOpen setting and give access with button blow" : "We need location permission to continue.\nGive us access with button blow",textAlign: TextAlign.center),
-          const SizedBox(height: 15,),
-          ElevatedButton.icon(onPressed: () => {
-            isPermanentlyDenied ? openAppSettings() : context.read<SearchDeviceBloc>().add(SearchDeviceEvent(SearchDeviceEvents.showPermissionDialog))
-          }, icon: Icon(isPermanentlyDenied ? Icons.settings : Icons.security), label: Text(isPermanentlyDenied ? "Open Setting" : "Give Permission"))
-        ],
-      ),
-    );
-  }
-
-  Widget _progressBar(){
-    return Center(child: CircularProgressIndicator());
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    var bloc = context.read<SearchDeviceBloc>();
-    if (state == AppLifecycleState.resumed && bloc.state.status == SearchDeviceStatus.permissionPermanentlyDenied){
-      bloc.add(SearchDeviceEvent(SearchDeviceEvents.showPermissionDialog));
+  _getStep() {
+    switch (currentStep){
+      case 0:
+        return SelectRoleView(onValueChange: (value) { _saveStepState("role",value); },initValue: _box!.get("role"),);
+      case 1:
+        return SearchingDeviceView(onDone: () {
+          setState(() {
+            currentStep++;
+          });
+        },);
+      case 2:
+        return RemoteConfigView();
     }
+  }
+
+  Future<void> _initStorage() async {
+    log("init storage");
+    _box = await Hive.openBox("setup");
+    return Future.value();
+
+   // currentStep = _box!.length;
+   // setState(() {});
+  }
+
+  _saveStepState(String key,dynamic state) async {
+    log("$key - $state");
+    _box!.put(key, state.toString());
   }
 }
