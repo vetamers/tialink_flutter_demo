@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tialink/widgets/google_sign_in_button.dart';
-import 'package:tialink/widgets/yahoo_sign_in_button.dart';
+
+import 'package:tialink/ui/widgets.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);

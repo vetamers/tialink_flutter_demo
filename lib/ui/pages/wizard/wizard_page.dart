@@ -7,11 +7,11 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart'
     as bluetooth;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:im_stepper/stepper.dart';
-import 'package:tialink/bluetooth/bluetooth_bloc.dart';
-import 'package:tialink/wizard/bloc/search/search_device_bloc.dart';
-import 'package:tialink/wizard/view/config_remote_view.dart';
-import 'package:tialink/wizard/view/search_device_view.dart';
-import 'package:tialink/wizard/view/select_role_view.dart';
+import 'package:tialink/core/bluetooth/bluetooth.dart';
+
+import 'config_remote_view.dart';
+import 'search_device_view.dart';
+import 'select_role_view.dart';
 
 class WizardPage extends StatefulWidget {
   const WizardPage({Key? key}) : super(key: key);
@@ -29,16 +29,9 @@ class _WizardPageState extends State<WizardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (context) =>
-                BluetoothBloc(bluetooth.FlutterBluetoothSerial.instance),
-          ),
-          BlocProvider(
-            create: (context) => SearchDeviceBloc(context.read()),
-          ),
-        ],
+    return BlocProvider(
+      create: (context) =>
+          BluetoothBloc(bluetooth.FlutterBluetoothSerial.instance),
         child: Scaffold(
           appBar: AppBar(
             title: Text("Setup"),

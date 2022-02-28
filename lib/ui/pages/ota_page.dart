@@ -5,9 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:otp_autofill/otp_autofill.dart';
 import 'package:pinput/pin_put/pin_put.dart';
-import 'package:tialink/wizard/view/wizard_page.dart';
 
-import '../auth/phone/phone_verification_bloc.dart';
+import 'package:tialink/ui/pages.dart';
+import 'package:tialink/core/auth/auth.dart';
 
 class OtaVerification extends StatelessWidget {
   final VoidCallback onVerificationComplete;

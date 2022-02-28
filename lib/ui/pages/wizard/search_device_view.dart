@@ -7,12 +7,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:signal_strength_indicator/signal_strength_indicator.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart'
     as bluetooth;
-import 'package:tialink/core/permission/view/permission_view.dart';
-
-import '../../bluetooth/bluetooth_bloc.dart';
-import '../../core/permission/bloc/permission_bloc.dart';
-import '../../widgets/bluetooth_searching_loading.dart';
-import '../bloc/search/search_device_bloc.dart';
+import 'package:tialink/core/bluetooth/bluetooth.dart';
+import 'package:tialink/core/permission/permission.dart';
+import 'package:tialink/ui/widgets.dart';
 
 class SearchingDeviceView extends StatefulWidget {
   final VoidCallback? Function() onDone;

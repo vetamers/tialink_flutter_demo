@@ -2,13 +2,10 @@ import 'package:auth/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:tialink/auth/phone/phone_verification_bloc.dart';
-import 'package:tialink/bloc_observer.dart';
-import 'package:tialink/pages/login_page.dart';
-import 'package:tialink/pages/ota_page.dart';
-import 'package:tialink/pages/welcome_page.dart';
-import 'package:tialink/wizard/view/wizard_page.dart';
+
+import 'bloc_observer.dart';
+import 'ui/pages.dart';
+import 'core/auth/auth.dart';
 
 void main() async {
   await Hive.initFlutter();
