@@ -1,10 +1,10 @@
-
 import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart' as bluetooth;
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart'
+    as bluetooth;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:im_stepper/stepper.dart';
 import 'package:tialink/bluetooth/bluetooth_bloc.dart';
@@ -24,15 +24,20 @@ class WizardPage extends StatefulWidget {
 
 class _WizardPageState extends State<WizardPage> {
   Box? _box;
-  final stepsName = ["Select Role","Connecting to device","Setup remotes"];
-  int currentStep = 2;
+  final stepsName = ["Select Role", "Connecting to device", "Setup remotes"];
+  int currentStep = 0;
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
         providers: [
-          BlocProvider(create: (context) => BluetoothBloc(bluetooth.FlutterBluetoothSerial.instance),),
-          BlocProvider(create: (context) => SearchDeviceBloc(context.read()),),
+          BlocProvider(
+            create: (context) =>
+                BluetoothBloc(bluetooth.FlutterBluetoothSerial.instance),
+          ),
+          BlocProvider(
+            create: (context) => SearchDeviceBloc(context.read()),
+          ),
         ],
         child: Scaffold(
           appBar: AppBar(
@@ -42,28 +47,43 @@ class _WizardPageState extends State<WizardPage> {
           body: Column(
             children: [
               IconStepper(
-                activeStep: currentStep,
-                icons: const [
-                  Icon(Icons.account_circle,color: Colors.white,),
-                  Icon(Icons.bluetooth,color: Colors.white,),
-                  Icon(Icons.settings_remote_rounded,color: Colors.white,),
-                ],
-                enableNextPreviousButtons: false,
-                enableStepTapping: false,
-                activeStepColor: Colors.blue
+                  activeStep: currentStep,
+                  icons: const [
+                    Icon(
+                      Icons.account_circle,
+                      color: Colors.white,
+                    ),
+                    Icon(
+                      Icons.bluetooth,
+                      color: Colors.white,
+                    ),
+                    Icon(
+                      Icons.settings_remote_rounded,
+                      color: Colors.white,
+                    ),
+                  ],
+                  enableNextPreviousButtons: false,
+                  enableStepTapping: false,
+                  activeStepColor: Colors.blue),
+              SizedBox(
+                height: 20,
               ),
-              SizedBox(height: 20,),
               Column(
                 children: [
                   Text("Step ${currentStep + 1}"),
-                  Text(stepsName[currentStep],style: Theme.of(context).textTheme.headline6,)
+                  Text(
+                    stepsName[currentStep],
+                    style: Theme.of(context).textTheme.headline6,
+                  )
                 ],
               ),
               Expanded(
                 child: FutureBuilder(
                   future: _box == null ? _initStorage() : Future.value(),
-                  builder: (context,snapshot){
-                    return snapshot.connectionState == ConnectionState.done ? _getStep() : SizedBox();
+                  builder: (context, snapshot) {
+                    return snapshot.connectionState == ConnectionState.done
+                        ? _getStep()
+                        : SizedBox();
                   },
                 ),
               )
@@ -85,34 +105,42 @@ class _WizardPageState extends State<WizardPage> {
                         icon: Icon(Icons.navigate_before_rounded),
                       )
                     : SizedBox(),
-                currentStep == 0 ? FloatingActionButton.extended(
-                    onPressed: () {
-                      switch (currentStep) {
-                        case 0:
-                          setState(() {
-                            currentStep++;
-                          });
-                      }
-                    },
-                    icon: Icon(Icons.navigate_next_rounded),
-                    label: Text("Next")) : SizedBox(),
+                currentStep == 0
+                    ? FloatingActionButton.extended(
+                        onPressed: () {
+                          switch (currentStep) {
+                            case 0:
+                              setState(() {
+                                currentStep++;
+                              });
+                          }
+                        },
+                        icon: Icon(Icons.navigate_next_rounded),
+                        label: Text("Next"))
+                    : SizedBox(),
               ],
             ),
           ),
-        )
-    );
+        ));
   }
 
   _getStep() {
-    switch (currentStep){
+    switch (currentStep) {
       case 0:
-        return SelectRoleView(onValueChange: (value) { _saveStepState("role",value); },initValue: _box!.get("role"),);
+        return SelectRoleView(
+          onValueChange: (value) {
+            _saveStepState("role", value);
+          },
+          initValue: _box!.get("role"),
+        );
       case 1:
-        return SearchingDeviceView(onDone: () {
-          setState(() {
-            currentStep++;
-          });
-        },);
+        return SearchingDeviceView(
+          onDone: () {
+            setState(() {
+              currentStep++;
+            });
+          },
+        );
       case 2:
         return RemoteConfigView();
     }
@@ -123,11 +151,11 @@ class _WizardPageState extends State<WizardPage> {
     _box = await Hive.openBox("setup");
     return Future.value();
 
-   // currentStep = _box!.length;
-   // setState(() {});
+    // currentStep = _box!.length;
+    // setState(() {});
   }
 
-  _saveStepState(String key,dynamic state) async {
+  _saveStepState(String key, dynamic state) async {
     log("$key - $state");
     _box!.put(key, state.toString());
   }

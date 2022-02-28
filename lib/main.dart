@@ -2,6 +2,7 @@ import 'package:auth/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tialink/auth/phone/phone_verification_bloc.dart';
 import 'package:tialink/bloc_observer.dart';
 import 'package:tialink/pages/login_page.dart';
@@ -59,7 +60,7 @@ class _TiaLinkState extends State<TiaLink> {
               }
             }
           } else {
-            return Scaffold();
+            return Text("Not implemented: ${snapshot.connectionState}");
           }
         },
       ),
