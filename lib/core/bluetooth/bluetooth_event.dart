@@ -22,3 +22,10 @@ class BluetoothSendData extends BluetoothEvent{
 
   BluetoothSendData(this.data);
 }
+
+class BluetoothNewRemoteEvent extends BluetoothEvent{
+  final int doorNumber;
+  final int buttonMode;
+
+  BluetoothNewRemoteEvent(this.buttonMode, this.doorNumber);
+}

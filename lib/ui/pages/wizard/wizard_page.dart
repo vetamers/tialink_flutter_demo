@@ -3,8 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart'
-    as bluetooth;
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart' as bluetooth;
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:im_stepper/stepper.dart';
 import 'package:tialink/core/bluetooth/bluetooth.dart';
@@ -30,8 +29,7 @@ class _WizardPageState extends State<WizardPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          BluetoothBloc(bluetooth.FlutterBluetoothSerial.instance),
+        create: (context) => BluetoothBloc(bluetooth.FlutterBluetoothSerial.instance),
         child: Scaffold(
           appBar: AppBar(
             title: Text("Setup"),
@@ -51,7 +49,7 @@ class _WizardPageState extends State<WizardPage> {
                       color: Colors.white,
                     ),
                     Icon(
-                      Icons.settings_remote_rounded,
+                      Icons.settings_rounded,
                       color: Colors.white,
                     ),
                   ],
