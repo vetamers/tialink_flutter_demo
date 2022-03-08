@@ -1,17 +1,22 @@
 import 'package:auth/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:tialink/data/provider/device_provider.dart';
+import 'package:tialink/data/provider/home_provider.dart';
+import 'package:tialink/data/repository/device_repository.dart';
+import 'package:tialink/data/repository/home_repository.dart';
 
 import 'bloc_observer.dart';
+import 'core/bluetooth/bluetooth.dart';
 import 'ui/pages.dart';
 import 'core/auth/auth.dart';
 
 void main() async {
   await Hive.initFlutter();
-  Authenticator.instance.initAuthenticationPackage();
-  BlocOverrides.runZoned(() => runApp(TiaLink()),
-      blocObserver: AppBlocObserver());
+  await Authenticator.instance.initAuthenticationPackage();
+  BlocOverrides.runZoned(() => runApp(TiaLink()), blocObserver: AppBlocObserver());
 }
 
 class TiaLink extends StatefulWidget {
@@ -26,48 +31,60 @@ class _TiaLinkState extends State<TiaLink> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "TiaLink",
-      home: FutureBuilder(
-        future: Hive.openBox("app"),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              return Scaffold(
-                backgroundColor: Colors.red,
-                body: Center(
-                  child: Container(
-                    padding: EdgeInsets.all(35),
-                    child: Text(
-                      snapshot.error.toString(),
-                      style: TextStyle(color: Colors.white, fontSize: 20),
+      home: BlocProvider(
+        create: (context) => BluetoothBloc(FlutterBluetoothSerial.instance),
+        child: FutureBuilder(
+          future: Hive.openBox("app"),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                return Scaffold(
+                  backgroundColor: Colors.red,
+                  body: Center(
+                    child: Container(
+                      padding: EdgeInsets.all(35),
+                      child: Text(
+                        snapshot.error.toString(),
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      ),
                     ),
                   ),
-                ),
-              );
-            } else {
-              if (Hive.box("app").get("isFirstLaunch", defaultValue: true)) {
-                return WelcomePage(() {
-                  setState(() {});
-                });
+                );
               } else {
-                if (Hive.box("auth").containsKey("token")){
-                  return WizardPage();
-                }else{
-                  return LoginPage();
+                if (Hive.box("app").get("isFirstLaunch", defaultValue: true)) {
+                  return WelcomePage(() {
+                    setState(() {});
+                  });
+                } else {
+                  if (Hive.box("auth").containsKey("token")) {
+                    if (Hive.box("app").get("isWizardCompleted", defaultValue: false)) {
+                      return Text("Main");
+                    } else {
+                      return RepositoryProvider(
+                        create: (context) => HomeRepository(),
+                        child: WizardPage(
+                          onDone: () {
+                            setState(() {});
+                          },
+                        ),
+                      );
+                    }
+                  } else {
+                    return LoginPage(onDone: () {
+                      setState(() {});
+                    },);
+                  }
                 }
               }
+            } else {
+              return Text("Not implemented: ${snapshot.connectionState}");
             }
-          } else {
-            return Text("Not implemented: ${snapshot.connectionState}");
-          }
-        },
+          },
+        ),
       ),
       routes: {
-        "/ota": (context) => BlocProvider(
-            create: (context) => PhoneVerificationBloc(),
-            child: OtaVerification(() {
-              setState(() {});
-            },)),
-        WizardPage.routeName: (context) => WizardPage()
+        "/ota": (context) =>
+            BlocProvider(create: (context) => PhoneVerificationBloc(), child: PhoneVerificationPage()),
       },
     );
   }

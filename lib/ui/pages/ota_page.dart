@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:auth/auth.dart';
 import 'package:auth/core/api_error.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:otp_autofill/otp_autofill.dart';
@@ -9,30 +12,37 @@ import 'package:pinput/pin_put/pin_put.dart';
 import 'package:tialink/ui/pages.dart';
 import 'package:tialink/core/auth/auth.dart';
 
-class OtaVerification extends StatelessWidget {
-  final VoidCallback onVerificationComplete;
+class PhoneVerificationPage extends StatefulWidget {
+  const PhoneVerificationPage({Key? key}) : super(key: key);
 
-  OtaVerification(this.onVerificationComplete, {Key? key}) : super(key: key);
+  @override
+  State<PhoneVerificationPage> createState() => _PhoneVerificationPageState();
+}
 
+class _PhoneVerificationPageState extends State<PhoneVerificationPage> {
   final BoxDecoration pinPutDecoration = const BoxDecoration(
       color: Color(0xFFF8F7FB),
       shape: BoxShape.circle,
-      boxShadow: [
-        BoxShadow(
-            color: Color(0xFFEBEAEC),
-            spreadRadius: 2,
-            blurRadius: 3,
-            offset: Offset(0, 3))
-      ]);
+      boxShadow: [BoxShadow(color: Color(0xFFEBEAEC), spreadRadius: 2, blurRadius: 3, offset: Offset(0, 3))]);
 
-  APIException? codeError;
   final _focusNode = FocusNode();
   final _controller = TextEditingController();
+  late PhoneVerificationRequest request;
+
+  @override
+  void dispose() {
+    OTPInteractor().stopListenForCode();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    var args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, String>;
+    var args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
+    log(args.toString());
+
+    if (context.read<PhoneVerificationBloc>().state.value == PhoneVerificationStatus.initial) {
+      context.read<PhoneVerificationBloc>().add(PhoneVerificationRequestEvent("${args["phone"]}"));
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -45,57 +55,63 @@ class OtaVerification extends StatelessWidget {
           centerTitle: true,
           leading: IconButton(
               onPressed: () {
-                Navigator.pop(context);
+                _onBackPress().then((value) => value ? Navigator.pop(context) : null);
               },
               icon: const Icon(
                 Icons.arrow_back,
                 color: Colors.black,
               ))),
       body: WillPopScope(
-        child: BlocBuilder<PhoneVerificationBloc, PhoneVerificationState>(
+        child: BlocConsumer<PhoneVerificationBloc, PhoneVerificationState>(
           builder: (context, state) {
-            codeError = null;
-
-            if (state is PhoneVerificationInitial) {
-              context
-                  .read<PhoneVerificationBloc>()
-                  .add(PhoneVerificationRequestEvent("0${args["phone"]}"));
-              return progressbar();
-            } else if (state is PhoneVerificationRequested) {
-              args.addAll({"verificationId": state.verificationRequest.id});
-              _startLisenteForCode();
-              return mainScreen(context, args);
-            } else if (state is PhoneVerificationInvalidCredential) {
-              WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(state.error.apiResultError!.message!)));
-              });
-              return mainScreen(context, args);
-            } else if (state is PhoneVerificationDone) {
-              Hive.box("app").put("isWizardComplete", false);
-              WidgetsBinding.instance?.addPostFrameCallback(
-                (timeStamp) {
-                  Navigator.pushNamed(context, WizardPage.routeName);
-                },
-              );
-              return progressbar();
-            } else {
-              return Text(state.toString());
+            switch (state.value) {
+              case PhoneVerificationStatus.initial:
+                return _progressBar();
+              case PhoneVerificationStatus.requested:
+                request = state.metadata["request"];
+                return _mainScreen(context, args);
+              case PhoneVerificationStatus.requestError:
+                return _requestError(state.metadata["error"], state.metadata["event"]);
+              case PhoneVerificationStatus.tryCredential:
+                return _progressBar();
+              case PhoneVerificationStatus.invalidCredential:
+                return _mainScreen(context, args);
+              case PhoneVerificationStatus.done:
+                return _progressBar();
+            }
+          },
+          listener: (context, state) {
+            var messenger = ScaffoldMessenger.of(context);
+            switch (state.value) {
+              case PhoneVerificationStatus.invalidCredential:
+                messenger.showSnackBar(SnackBar(
+                  content: Text((state.metadata["error"] as APIException).apiResultError!.message!),
+                  backgroundColor: Theme.of(context).errorColor,
+                ));
+                _controller.clear();
+                break;
+              case PhoneVerificationStatus.requested:
+                _startLisenteForCode();
+                break;
+              case PhoneVerificationStatus.done:
+                Navigator.pop(context, true);
+                break;
+              default:
             }
           },
         ),
-        onWillPop: () => Future.value(false),
+        onWillPop: () => _onBackPress(),
       ),
     );
   }
 
-  Widget progressbar() {
+  Widget _progressBar() {
     return const Center(
       child: CircularProgressIndicator(),
     );
   }
 
-  Widget mainScreen(BuildContext context, Map<String, dynamic> args) {
+  Widget _mainScreen(BuildContext context, Map<String, dynamic> args) {
     return Container(
       padding: const EdgeInsets.fromLTRB(25, 10, 25, 10),
       child: Column(
@@ -150,15 +166,13 @@ class OtaVerification extends StatelessWidget {
               eachFieldWidth: 60,
               eachFieldHeight: 60,
               fieldsAlignment: MainAxisAlignment.spaceAround,
-              textStyle:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               focusNode: _focusNode,
               followingFieldDecoration: pinPutDecoration,
               selectedFieldDecoration: pinPutDecoration,
               submittedFieldDecoration: pinPutDecoration,
               onSubmit: (s) {
-                context.read<PhoneVerificationBloc>().add(
-                    PhoneVerificationTryCodeEvent(args["verificationId"], s));
+                context.read<PhoneVerificationBloc>().add(PhoneVerificationTryCodeEvent(request.id, s));
               },
             ),
           ),
@@ -167,8 +181,8 @@ class OtaVerification extends StatelessWidget {
             height: 50,
             child: ElevatedButton(
               style: ButtonStyle(
-                  shape: MaterialStateProperty.all(const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(25))))),
+                  shape: MaterialStateProperty.all(
+                      const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(25))))),
               onPressed: () {},
               child: const Text(
                 "Submit",
@@ -182,7 +196,51 @@ class OtaVerification extends StatelessWidget {
   }
 
   void _startLisenteForCode() {
-    OTPInteractor().startListenUserConsent().then((value) =>
-        _controller.text = extractCodeFromString(value ?? '', 4) ?? '');
+    OTPInteractor()
+        .startListenUserConsent()
+        .then((value) => _controller.text = extractCodeFromString(value ?? '', 4) ?? '');
+  }
+
+  Widget _requestError(APIException error, PhoneVerificationEvent event) {
+    return AlertDialog(
+      title: Text("Verification request faild"),
+      content: Text(error.apiResultError!.message!),
+      actions: [
+        TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: Text("OK"))
+      ],
+    );
+  }
+
+  Future<bool> _onBackPress() async {
+    var state = context.read<PhoneVerificationBloc>().state;
+
+    if (state.value == PhoneVerificationStatus.requested) {
+      return Future.value(await showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (dialog) => AlertDialog(
+                title: const Text("Cancel pending verification"),
+                content: const Text(
+                    "Do you want to cancel this verification if your cancel it you can't verify your phone for 2min"),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(dialog, false);
+                      },
+                      child: const Text("No")),
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(context, true);
+                      },
+                      child: const Text("OK"))
+                ],
+              )));
+    }
+
+    return Future.value(true);
   }
 }

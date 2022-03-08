@@ -5,8 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:signal_strength_indicator/signal_strength_indicator.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart'
-    as bluetooth;
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart' as bluetooth;
 import 'package:tialink/core/bluetooth/bluetooth.dart';
 import 'package:tialink/core/permission/permission.dart';
 import 'package:tialink/ui/widgets.dart';
@@ -22,8 +21,7 @@ class SearchingDeviceView extends StatefulWidget {
 class _SearchingDeviceViewState extends State<SearchingDeviceView> {
   @override
   void initState() {
-    if (context.read<BluetoothBloc>().state.value !=
-        BluetoothStatus.connected) {
+    if (context.read<BluetoothBloc>().state.value != BluetoothStatus.connected) {
       context.read<BluetoothBloc>().add(BluetoothDiscoveryEvent());
     }
 
@@ -49,9 +47,7 @@ class _SearchingDeviceViewState extends State<SearchingDeviceView> {
                       action: SnackBarAction(
                         label: "Retry",
                         onPressed: () {
-                          context
-                              .read<BluetoothBloc>()
-                              .add(BluetoothDiscoveryEvent());
+                          context.read<BluetoothBloc>().add(BluetoothDiscoveryEvent());
                         },
                         textColor: Colors.white,
                       ),
@@ -63,8 +59,9 @@ class _SearchingDeviceViewState extends State<SearchingDeviceView> {
                       backgroundColor: Colors.green,
                     ));
 
-                    Future.delayed(Duration(seconds: 1))
-                        .then((value) => widget.onDone());
+                    Future.delayed(Duration(seconds: 1)).then((value) => widget.onDone());
+                    break;
+                    default: 
                 }
               },
               builder: (context, state) {
@@ -74,8 +71,7 @@ class _SearchingDeviceViewState extends State<SearchingDeviceView> {
                   case BluetoothStatus.deviceNotFound:
                     return _deviceNotFound();
                   case BluetoothStatus.deviceFound:
-                    return _deviceFound(
-                        (state as BluetoothStateDeviceFound).result);
+                    return _deviceFound((state as BluetoothStateDeviceFound).result);
                   case BluetoothStatus.connected:
                     return _deviceConnected();
                   default:

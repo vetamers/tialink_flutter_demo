@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:http/http.dart';
@@ -31,7 +32,6 @@ class HttpHelper {
   Future<Response> get(String route) async =>
       _client.get(Uri.parse(apiUrl + route), headers: _baseHeader);
 
-  Future<Response> post(String route, dynamic body) async =>
-      _client.post(Uri.parse(apiUrl + route),
-          body: jsonEncode(body), headers: _baseHeader);
+  Future<Response> post(String route, dynamic body) async => _client
+      .post(Uri.parse(apiUrl + route), body: jsonEncode(body), headers: _baseHeader);
 }

@@ -1,38 +1,30 @@
 part of 'phone_verification_bloc.dart';
 
-@immutable
-abstract class PhoneVerificationState {}
+enum PhoneVerificationStatus { initial, requested, requestError, tryCredential, invalidCredential, done }
 
-class PhoneVerificationInitial extends PhoneVerificationState {}
+class PhoneVerificationState extends Equatable {
+  final PhoneVerificationStatus value;
+  final Map<String, dynamic> metadata;
 
-class PhoneVerificationRequested extends PhoneVerificationState {
-  final PhoneVerificationRequest verificationRequest;
+  const PhoneVerificationState(this.value, [this.metadata = const {}]);
 
-  PhoneVerificationRequested(this.verificationRequest);
+  factory PhoneVerificationState.initial() => const PhoneVerificationState(PhoneVerificationStatus.initial, {});
+
+  factory PhoneVerificationState.requested(PhoneVerificationRequest request) =>
+      PhoneVerificationState(PhoneVerificationStatus.requested, {"request": request});
+
+  factory PhoneVerificationState.error(APIException error, PhoneVerificationEvent event) =>
+      PhoneVerificationState(PhoneVerificationStatus.requestError, {"error": error, "event": event});
+
+  factory PhoneVerificationState.tryCredential(PhoneAuthCredential credential) =>
+      PhoneVerificationState(PhoneVerificationStatus.tryCredential, {"credential": credential});
+
+  factory PhoneVerificationState.invalidCredential(APIException error) =>
+      PhoneVerificationState(PhoneVerificationStatus.invalidCredential, {"error": error});
+
+  factory PhoneVerificationState.done(AuthResult result) =>
+      PhoneVerificationState(PhoneVerificationStatus.done, {"result": result});
+
+  @override
+  List<Object?> get props => [value, metadata];
 }
-
-class PhoneVerificationRequestError extends PhoneVerificationState{
-  final APIException error;
-  final PhoneVerificationRequestEvent event;
-
-  PhoneVerificationRequestError(this.error, this.event);
-}
-
-class PhoneVerificationTryCredential extends PhoneVerificationState{
-  final PhoneAuthCredential credential;
-
-  PhoneVerificationTryCredential(this.credential);
-}
-
-class PhoneVerificationInvalidCredential extends PhoneVerificationState{
-  final APIException error;
-
-  PhoneVerificationInvalidCredential(this.error);
-}
-
-class PhoneVerificationDone extends PhoneVerificationState {
-  final AuthResult authResult;
-
-  PhoneVerificationDone(this.authResult);
-}
-

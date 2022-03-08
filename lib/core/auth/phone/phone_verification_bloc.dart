@@ -1,11 +1,10 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:auth/auth.dart';
 import 'package:auth/core/api_error.dart';
 import 'package:auth/model/api_result.dart';
-import 'package:auth/model/user.dart';
 import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
 part 'phone_verification_event.dart';
@@ -15,7 +14,7 @@ class PhoneVerificationBloc
     extends Bloc<PhoneVerificationEvent, PhoneVerificationState> {
   final PhoneAuthProvider _provider = PhoneAuthProvider();
 
-  PhoneVerificationBloc() : super(PhoneVerificationInitial()) {
+  PhoneVerificationBloc() : super(PhoneVerificationState.initial()) {
     on<PhoneVerificationRequestEvent>(_requestCode);
     on<PhoneVerificationTryCodeEvent>(_tryCode);
   }
@@ -23,10 +22,9 @@ class PhoneVerificationBloc
   FutureOr<void> _requestCode(PhoneVerificationRequestEvent event,
       Emitter<PhoneVerificationState> emit) async {
     try {
-      emit(PhoneVerificationRequested(
-          await _provider.verificationRequest(event.phone)));
+      emit(PhoneVerificationState.requested(await _provider.verificationRequest(event.phone)));
     } on APIException catch (e) {
-      emit(PhoneVerificationRequestError(e, event));
+      emit(PhoneVerificationState.error(e, event));
     }
   }
 
@@ -34,9 +32,9 @@ class PhoneVerificationBloc
       Emitter<PhoneVerificationState> emit) async {
     try {
       var phoneCredential = _provider.getCredential(event.verificationId, event.smsCode);
-      emit(PhoneVerificationDone(await Authenticator.instance.signInWithCredential(phoneCredential)));
+      emit(PhoneVerificationState.done(await Authenticator.instance.signInWithCredential(phoneCredential)));
     } on APIException catch (e) {
-      emit(PhoneVerificationInvalidCredential(e));
+      emit(PhoneVerificationState.invalidCredential(e));
     }
   }
 }

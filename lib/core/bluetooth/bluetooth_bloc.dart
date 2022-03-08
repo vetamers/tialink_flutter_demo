@@ -18,6 +18,7 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
 
   final FlutterBluetoothSerial _serial;
   BluetoothConnection? _connection;
+  BluetoothDevice? _device;
   Stream<Uint8List>? _inputStream;
 
   bool isDeviceConnected() => _connection?.isConnected == true;
@@ -54,6 +55,7 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
     var connection = await BluetoothConnection.toAddress(event.device.address);
 
     if (connection.isConnected) {
+      _device = event.device;
       _connection = connection;
       _inputStream = connection.input!;
 
@@ -99,7 +101,7 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
             if (step == event.buttonMode) {
               log(secret);
               _connection!.output.add(Uint8List.fromList(secret.codeUnits));
-              emit(BluetoothState(BluetoothStatus.operationDone));
+              emit(BluetoothState(BluetoothStatus.operationDone,{"address":_device!.address,"secret":secret,"button_mode":event.buttonMode}));
               break;
             } else {
               string = "";

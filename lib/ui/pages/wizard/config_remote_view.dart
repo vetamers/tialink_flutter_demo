@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -5,10 +7,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:im_stepper/stepper.dart';
 
 import 'package:tialink/core/bluetooth/bluetooth.dart';
+import 'package:tialink/data/repository/device_repository.dart';
+import 'package:tialink/data/repository/home_repository.dart';
 import 'package:tialink/ui/icons.dart';
 
 class RemoteConfigView extends StatefulWidget {
-  const RemoteConfigView({Key? key}) : super(key: key);
+  final VoidCallback onDone;
+  const RemoteConfigView({Key? key, required this.onDone}) : super(key: key);
 
   @override
   _RemoteConfigViewState createState() => _RemoteConfigViewState();
@@ -17,6 +22,8 @@ class RemoteConfigView extends StatefulWidget {
 class _RemoteConfigViewState extends State<RemoteConfigView> {
   @override
   Widget build(BuildContext context) {
+    HomeRepository _homeRepository = RepositoryProvider.of<HomeRepository>(context);
+
     return BlocConsumer<BluetoothBloc, BluetoothState>(
       buildWhen: (previous, current) => current.value != BluetoothStatus.dataReceived,
       builder: (context, state) {
@@ -26,7 +33,7 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
           case BluetoothStatus.waitingForData:
             return _waitingForButton(state.metadata);
           case BluetoothStatus.operationDone:
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           default:
             return Text(state.value.toString());
         }
@@ -40,7 +47,32 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
             ));
             break;
           case BluetoothStatus.operationDone:
-              
+            _homeRepository
+                .quickAdd(
+                    homeLabel: "Default",
+                    doorLabel: "Default",
+                    deviceMacAddress: state.metadata["address"],
+                    deviceSecret: state.metadata["secret"],
+                    buttonMode: state.metadata["button_mode"])
+                .then((value) {
+              if (value.isSuccessful) {
+                widget.onDone();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(value.message!),
+                  duration: Duration(minutes: 5),
+                  backgroundColor: Theme.of(context).errorColor,
+                ));
+              }
+            }).onError((error, stackTrace) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(error.toString()),
+                duration: Duration(minutes: 5),
+                backgroundColor: Theme.of(context).errorColor,
+              ));
+            });
+            break;
+          default:
         }
       },
     );
@@ -95,7 +127,7 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
                 ),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
             Row(
@@ -160,12 +192,12 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
                 ),
                 Text(
                   "Push button ${button.name.toUpperCase()} in your remote",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 25,
                 ),
-                SpinKitWave(
+                const SpinKitWave(
                   color: Colors.blue,
                 )
               ],

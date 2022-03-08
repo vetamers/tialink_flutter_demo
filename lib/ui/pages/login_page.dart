@@ -1,10 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:tialink/ui/widgets.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  final VoidCallback onDone;
+  const LoginPage({Key? key, required this.onDone}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -88,25 +91,19 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _firstController,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      label: Text(
-                          isPhoneMethod ? "Phone number" : "Email Address"),
-                      prefix:
-                          currentSegment == "phone" ? const Text("+98") : null,
-                      prefixIcon:
-                          Icon(isPhoneMethod ? Icons.phone : Icons.email),
+                      label: Text(isPhoneMethod ? "Phone number" : "Email Address"),
+                      prefix: currentSegment == "phone" ? const Text("+98") : null,
+                      prefixIcon: Icon(isPhoneMethod ? Icons.phone : Icons.email),
                     ),
                     maxLength: currentSegment == "phone" ? 10 : null,
                     maxLines: 1,
-                    keyboardType: isPhoneMethod
-                        ? TextInputType.phone
-                        : TextInputType.emailAddress,
+                    keyboardType: isPhoneMethod ? TextInputType.phone : TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     validator: (value) {
                       if (value?.isEmpty == true) {
                         return 'Please fill this field';
                       } else if (isPhoneMethod) {
-                        RegExp regexp =
-                            RegExp(r'^{?(0?9[0-9]{9,9}}?)$', multiLine: false);
+                        RegExp regexp = RegExp(r'^{?(0?9[0-9]{9,9}}?)$', multiLine: false);
 
                         if (!regexp.hasMatch(_firstController.text)) {
                           return 'Enter valid phone number';
@@ -129,31 +126,49 @@ class _LoginPageState extends State<LoginPage> {
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: ElevatedButton(
                         style: ButtonStyle(
-                            shape: MaterialStateProperty.all(
-                                RoundedRectangleBorder(
+                            shape: MaterialStateProperty.all(RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(25)),
                         ))),
-                        onPressed: !_isInProgress ? () {
-                          if (_formKey.currentState?.validate() == true){
-                            if (isPhoneMethod){
-                              var dialog = AlertDialog(
-                                title: Text("Confirmation"),
-                                content: Text("Are you sure you want to continue with +98" + _firstController.text + " number ?"),
-                                actions: [
-                                  TextButton(onPressed: () { Navigator.pop(context); }, child: Text("No")),
-                                  TextButton(onPressed: () {
-                                    //TODO: Request code to server
-                                    Navigator.pop(context);
-                                    Navigator.pushNamed(context, "/ota",arguments: {"phone":_firstController.text});
-                                  }, child: const Text("Yes")),
+                        onPressed: !_isInProgress
+                            ? () {
+                                if (_formKey.currentState?.validate() == true) {
+                                  if (isPhoneMethod) {
+                                    var dialog = AlertDialog(
+                                      title: Text("Confirmation"),
+                                      content: Text("Are you sure you want to continue with +98" +
+                                          _firstController.text +
+                                          " number ?"),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: Text("No")),
+                                        TextButton(
+                                            onPressed: () {
+                                              //TODO: Request code to server
+                                              Navigator.pop(context);
+                                              Navigator.pushNamed(context, "/ota",
+                                                  arguments: <String, dynamic>{
+                                                    "phone": _firstController.text
+                                                  }).then((value) {
+                                                if ((value as bool?) == true) {
+                                                  widget.onDone();
+                                                }
+                                              });
+                                            },
+                                            child: const Text("Yes")),
+                                      ],
+                                    );
 
-                                ],
-                              );
-
-                              showDialog(context: context, builder: (context) => dialog,);
-                            }
-                          }
-                        } : null,
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => dialog,
+                                    );
+                                  }
+                                }
+                              }
+                            : null,
                         child: Text(
                           "Login",
                           style: TextStyle(fontSize: 20),
@@ -216,9 +231,7 @@ class _LoginPageState extends State<LoginPage> {
           obscureText: true,
           keyboardType: TextInputType.text,
           decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              label: Text("Password"),
-              prefixIcon: Icon(Icons.lock)),
+              border: OutlineInputBorder(), label: Text("Password"), prefixIcon: Icon(Icons.lock)),
         ),
       );
     } else {

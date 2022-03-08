@@ -11,12 +11,17 @@ export 'providers/phone_auth.dart';
 export 'model/phone_verification.dart';
 export 'utils.dart';
 
+// TODO: Put network in separate package
+export 'core/network.dart';
+
 class Authenticator {
   static Authenticator instance = Authenticator();
   final _authService = AuthService();
   late UserProvider _userProvider;
+  
+  String? get token => Hive.box("auth").get("token");
 
-  void initAuthenticationPackage() async {
+  Future<void> initAuthenticationPackage() async {
     await Hive.openBox("auth");
   }
 

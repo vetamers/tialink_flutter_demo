@@ -6,9 +6,8 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'api_result.g.dart';
 
-
 @JsonSerializable(createToJson: false)
-class APIResult{
+class APIResult {
   @JsonKey(name: "ok")
   late bool isSuccessful;
   String? message;
