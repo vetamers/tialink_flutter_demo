@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -7,9 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:im_stepper/stepper.dart';
 
 import 'package:tialink/core/bluetooth/bluetooth.dart';
-import 'package:tialink/data/repository/device_repository.dart';
+import 'package:tialink/core/utils.dart';
 import 'package:tialink/data/repository/home_repository.dart';
-import 'package:tialink/ui/icons.dart';
 
 class RemoteConfigView extends StatefulWidget {
   final VoidCallback onDone;
@@ -22,10 +19,12 @@ class RemoteConfigView extends StatefulWidget {
 class _RemoteConfigViewState extends State<RemoteConfigView> {
   @override
   Widget build(BuildContext context) {
-    HomeRepository _homeRepository = RepositoryProvider.of<HomeRepository>(context);
+    HomeRepository _homeRepository =
+        RepositoryProvider.of<HomeRepository>(context);
 
     return BlocConsumer<BluetoothBloc, BluetoothState>(
-      buildWhen: (previous, current) => current.value != BluetoothStatus.dataReceived,
+      buildWhen: (previous, current) =>
+          current.value != BluetoothStatus.dataReceived,
       builder: (context, state) {
         switch (state.value) {
           case BluetoothStatus.connected:
@@ -172,7 +171,7 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
             icons: Iterable.generate(
                 totalSteps,
                 (i) => Icon(
-                      _indexToAlphabetIcon(i),
+                      indexToAlphabetIcon(i),
                       color: Colors.white,
                     )).toList(),
             direction: Axis.vertical,
@@ -192,7 +191,8 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
                 ),
                 Text(
                   "Push button ${button.name.toUpperCase()} in your remote",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(
                   height: 25,
@@ -206,20 +206,5 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
         ],
       ),
     );
-  }
-
-  IconData _indexToAlphabetIcon(int i) {
-    switch (i) {
-      case 0:
-        return TiaLinkIcons.alpha_a;
-      case 1:
-        return TiaLinkIcons.alpha_b;
-      case 2:
-        return TiaLinkIcons.alpha_c;
-      case 3:
-        return TiaLinkIcons.alpha_d;
-      default:
-        return Icons.settings_remote_rounded;
-    }
   }
 }

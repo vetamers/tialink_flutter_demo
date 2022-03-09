@@ -7,6 +7,7 @@ import 'package:tialink/data/provider/device_provider.dart';
 import 'package:tialink/data/provider/home_provider.dart';
 import 'package:tialink/data/repository/device_repository.dart';
 import 'package:tialink/data/repository/home_repository.dart';
+import 'package:tialink/ui/pages/main/main_page.dart';
 
 import 'bloc_observer.dart';
 import 'core/bluetooth/bluetooth.dart';
@@ -21,7 +22,6 @@ void main() async {
 
 class TiaLink extends StatefulWidget {
   const TiaLink({Key? key}) : super(key: key);
-
   @override
   _TiaLinkState createState() => _TiaLinkState();
 }
@@ -58,7 +58,7 @@ class _TiaLinkState extends State<TiaLink> {
                 } else {
                   if (Hive.box("auth").containsKey("token")) {
                     if (Hive.box("app").get("isWizardCompleted", defaultValue: false)) {
-                      return Text("Main");
+                      return MainPage();
                     } else {
                       return RepositoryProvider(
                         create: (context) => HomeRepository(),
@@ -70,9 +70,11 @@ class _TiaLinkState extends State<TiaLink> {
                       );
                     }
                   } else {
-                    return LoginPage(onDone: () {
-                      setState(() {});
-                    },);
+                    return LoginPage(
+                      onDone: () {
+                        setState(() {});
+                      },
+                    );
                   }
                 }
               }
