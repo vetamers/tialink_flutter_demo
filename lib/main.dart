@@ -7,6 +7,7 @@ import 'package:tialink/data/provider/device_provider.dart';
 import 'package:tialink/data/provider/home_provider.dart';
 import 'package:tialink/data/repository/device_repository.dart';
 import 'package:tialink/data/repository/home_repository.dart';
+import 'package:tialink/ui/pages/main/main_edit_page.dart';
 import 'package:tialink/ui/pages/main/main_page.dart';
 
 import 'bloc_observer.dart';
@@ -87,6 +88,7 @@ class _TiaLinkState extends State<TiaLink> {
       routes: {
         "/ota": (context) =>
             BlocProvider(create: (context) => PhoneVerificationBloc(), child: PhoneVerificationPage()),
+        "/edit":(context) => HomeEditPage()    
       },
     );
   }

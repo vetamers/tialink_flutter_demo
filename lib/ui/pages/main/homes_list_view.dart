@@ -1,11 +1,9 @@
-import 'package:auth/core/api_error.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tialink/core/bluetooth/bluetooth.dart';
 import 'package:tialink/core/utils.dart';
 import 'package:tialink/data/models.dart';
 import 'package:tialink/data/repository/home_repository.dart';
-import 'package:tialink/ui/icons.dart';
 
 class HomesListView extends StatefulWidget {
   const HomesListView({Key? key}) : super(key: key);
@@ -25,7 +23,7 @@ class _HomesListViewState extends State<HomesListView> {
         if (snapshot.connectionState == ConnectionState.done) {
           return snapshot.hasData
               ? _homeList(snapshot.data! as List<Home>)
-              : _error(snapshot.error as APIException);
+              : _error(snapshot.error);
         } else {
           return _progressBar();
         }
@@ -45,9 +43,41 @@ class _HomesListViewState extends State<HomesListView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      homes[index].label,
-                      style: const TextStyle(fontSize: 18),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          homes[index].label,
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        IconButton(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) {
+                                    return Wrap(children: [
+                                      ListTile(
+                                        leading: Icon(Icons.edit),
+                                        title: Text("Edit"),
+                                        onTap: () {
+                                          Navigator.popAndPushNamed(
+                                              context, "/edit",arguments: homes[index]);
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: Icon(Icons.security),
+                                        title: Text("Permits"),
+                                      ),
+                                      ListTile(
+                                        leading: Icon(Icons.short_text_rounded),
+                                        title: Text("Logs"),
+                                      )
+                                    ]);
+                                  });
+                            },
+                            icon: const Icon(Icons.more_vert_rounded))
+                      ],
                     ),
                     const SizedBox(
                       height: 16,
@@ -71,7 +101,7 @@ class _HomesListViewState extends State<HomesListView> {
         itemBuilder: (context, index) {
           return Card(
             elevation: 8,
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10))),
             child: Container(
               padding: const EdgeInsets.all(10),
