@@ -1,9 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:tialink/core/exceptions/api_exceptions.dart';
 
-abstract class UseCase<T,P extends UseCaseParam> {
-  Future<Either<T, APIException>> call(P param);
+abstract class UseCase<L,R,P extends UseCaseParam> {
+  Future<Either<L,R>> call(P param);
 }
 
 abstract class UseCaseParam extends Equatable {

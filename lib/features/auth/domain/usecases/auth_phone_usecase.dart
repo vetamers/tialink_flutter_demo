@@ -4,7 +4,7 @@ import 'package:tialink/core/usecases/usecase.dart';
 import 'package:tialink/features/auth/domain/entities/auth_phones_entities.dart';
 import 'package:tialink/features/auth/domain/repositories/auth_repository.dart';
 
-class RequestPhoneAuth extends UseCase<PhoneAuthRequest,RequestPhoneAuthParams>{
+class RequestPhoneAuth extends UseCase<PhoneAuthRequest,APIException,RequestPhoneAuthParams>{
   final AuthRepository _repository;
 
   RequestPhoneAuth(this._repository);

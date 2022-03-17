@@ -4,7 +4,7 @@ import 'package:tialink/core/usecases/usecase.dart';
 import 'package:tialink/features/auth/data/models/auth_models.dart';
 import 'package:tialink/features/auth/domain/repositories/auth_repository.dart';
 
-class LoginWithCredential extends UseCase<AuthResult,LoginParam> {
+class LoginWithCredential extends UseCase<AuthResult,APIException,LoginParam> {
   final AuthRepository repository;
 
   LoginWithCredential(this.repository);
