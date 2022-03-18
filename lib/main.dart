@@ -1,73 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:tialink/features/welcome/presentation/page/welcome_page.dart';
+import 'package:tialink/injection_container.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  await initInjector();
+
+  runApp(const TiaLinkApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class TiaLinkApp extends StatefulWidget {
+  const TiaLinkApp({Key? key}) : super(key: key);
+
+  @override
+  State<TiaLinkApp> createState() => _TiaLinkAppState();
+}
+
+class _TiaLinkAppState extends State<TiaLinkApp> {
 
   @override
   Widget build(BuildContext context) {
+    var box = GetIt.I<Box>(instanceName: "app_box");
+
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
+      title: "Tialink",
+      color: Colors.blue,
+      debugShowCheckedModeBanner: false,
+      initialRoute: _getInitialRoute(box),
+      routes: {
+        "/": (context) => Text("main"),
+        "welcome": (_) =>
+            Provider(
+              create: (_) => box,
+              child: WelcomePage(),
+            ),
+        "auth": (_) => Text("auth")
+      },
 
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(
-
-        title: Text(widget.title),
-      ),
-      body: Center(
-
-        child: Column(
-
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), 
-    );
+  
+  String _getInitialRoute(Box box){
+    if (box.get("isFirstLaunch",defaultValue: true)){
+      return "welcome";
+    }else if (!box.get("isUserLogin",defaultValue: false)){
+      return "auth";
+    }else if (!box.get("isSetupPage",defaultValue: false)){
+      return "setup";
+    }else{
+      return "/";
+    }
   }
 }

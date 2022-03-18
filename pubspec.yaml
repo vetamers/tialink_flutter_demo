@@ -21,6 +21,11 @@ dependencies:
   # Bluetooth Classic library
   flutter_bluetooth_serial: ^0.4.0
 
+  introduction_screen: ^3.0.0
+  lottie: ^1.2.2
+  get_it: ^7.2.0
+  provider: ^6.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -35,3 +40,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/animations/

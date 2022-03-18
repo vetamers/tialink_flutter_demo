@@ -5,20 +5,19 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 abstract class StorageService {
-  Future<void> init();
   Future<Box<dynamic>> secureBox(String name);
   Future<void> dispose();
 }
 
 class StorageServiceImpl implements StorageService{
   final FlutterSecureStorage secureStorage;
-  
-  StorageServiceImpl(this.secureStorage);
 
-  @override
-  Future<void> init() async {
+  StorageServiceImpl._(this.secureStorage);
+
+  static Future<StorageServiceImpl> instance(FlutterSecureStorage secureStorage) async {
     await Hive.initFlutter();
     log("Storage initialized");
+    return StorageServiceImpl._(secureStorage);
   }
 
   @override
