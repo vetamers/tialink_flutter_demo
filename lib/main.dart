@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:tialink/core/bloc_observer.dart';
+import 'package:tialink/features/auth/presentation/bloc/phone_auth_bloc.dart';
+import 'package:tialink/features/auth/presentation/pages/auth_page.dart';
+import 'package:tialink/features/auth/presentation/pages/phone_verification_page.dart';
 import 'package:tialink/features/welcome/presentation/page/welcome_page.dart';
 import 'package:tialink/injection_container.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await initInjector();
 
-  runApp(const TiaLinkApp());
+  BlocOverrides.runZoned(() => runApp(const TiaLinkApp()), blocObserver: Observer());
 }
 
 class TiaLinkApp extends StatefulWidget {
@@ -19,7 +25,6 @@ class TiaLinkApp extends StatefulWidget {
 }
 
 class _TiaLinkAppState extends State<TiaLinkApp> {
-
   @override
   Widget build(BuildContext context) {
     var box = GetIt.I<Box>(instanceName: "app_box");
@@ -31,25 +36,27 @@ class _TiaLinkAppState extends State<TiaLinkApp> {
       initialRoute: _getInitialRoute(box),
       routes: {
         "/": (context) => Text("main"),
-        "welcome": (_) =>
-            Provider(
+        "welcome": (_) => Provider(
               create: (_) => box,
               child: WelcomePage(),
             ),
-        "auth": (_) => Text("auth")
+        "auth": (_) => const AuthPage(),
+        "auth/phoneVerification": (_) => BlocProvider(
+              create: (_) => GetIt.I<PhoneAuthBloc>(),
+              child: const PhoneVerificationPage(),
+            ),
       },
-
     );
   }
-  
-  String _getInitialRoute(Box box){
-    if (box.get("isFirstLaunch",defaultValue: true)){
+
+  String _getInitialRoute(Box box) {
+    if (box.get("isFirstLaunch", defaultValue: true)) {
       return "welcome";
-    }else if (!box.get("isUserLogin",defaultValue: false)){
+    } else if (!box.get("isUserLogin", defaultValue: false)) {
       return "auth";
-    }else if (!box.get("isSetupPage",defaultValue: false)){
+    } else if (!box.get("isSetupPage", defaultValue: false)) {
       return "setup";
-    }else{
+    } else {
       return "/";
     }
   }

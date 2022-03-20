@@ -25,6 +25,5 @@ class InvalidRequestException extends APIException {
   final int statusCode;
   final dynamic data;
 
-  InvalidRequestException(this.statusCode, this.data)
-      : super('API return $statusCode HTTP code\nData: $data');
+  InvalidRequestException(this.statusCode, this.data) : super('HTTP $statusCode\nData: $data');
 }

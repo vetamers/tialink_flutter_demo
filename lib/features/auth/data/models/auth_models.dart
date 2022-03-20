@@ -44,6 +44,8 @@ class User extends Equatable {
 class AuthResult extends Equatable {
   final String token;
   final User user;
+
+  @JsonKey(name: "expire_at")
   final DateTime expireAt;
 
   @override
