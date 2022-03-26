@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:tialink/core/exceptions/bluetooth_exceptions.dart';
+import 'package:tialink/core/utils.dart';
 import 'package:tialink/features/bluetooth/data/datasources/bluetooth_local_datasource.dart';
 import 'package:tialink/features/bluetooth/data/datasources/bluetooth_remote_datasource.dart';
 import 'package:tialink/features/bluetooth/data/models/bluetooth_models.dart';
@@ -13,8 +16,10 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
 
   BluetoothRepositoryImpl(this._localDataSource, [this._remoteDataSource]);
 
+  @override
   set remoteSource(BluetoothRemoteDataSource remoteDataSource) {
     _remoteDataSource = remoteDataSource;
+    log("RemoteDataSource was set");
   }
 
   @override
@@ -50,21 +55,26 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
   }
 
   @override
-  Stream<RemoteSetupStatus> setupNewRemote(int buttonMode, int remoteNumber) async* {
-    _remoteDataSource!.sendBytes(TransferProtocol.newRemoteSetupMessage(buttonMode, remoteNumber).binary);
+  Stream<RemoteSetupState> setupNewRemote(int buttonMode, int remoteNumber) async* {
+    var secret = randomInt(8);
+    await _remoteDataSource!
+        .sendBytes(TransferProtocol.newRemoteSetupMessage(buttonMode, remoteNumber).binary);
 
     for (int i = 1; i <= buttonMode; i++) {
       var expectedMessage = TransferProtocol.successfulMessage(RemoteButton.values[i - 1]).message;
-      yield RemoteSetupStatus.waitingForAction;
+      yield RemoteSetupState(buttonMode, i, secret.toString(), RemoteSetupStatus.waitingForAction);
       var bytes = await _remoteDataSource!.readBytes(expectedMessage.length);
       var message = TransferProtocol.binaryToString(bytes);
 
       if (message == expectedMessage) {
-        yield RemoteSetupStatus.signalReceived;
+        yield RemoteSetupState(buttonMode, i, secret.toString(), RemoteSetupStatus.signalReceived);
         await Future.delayed(const Duration(seconds: 1));
       } else {
         throw BluetoothUnExpectedMessage(expectedMessage, message);
       }
     }
+
+    await _remoteDataSource!.sendBytes(TransferProtocol.uniqueKey(secret).binary);
+    yield RemoteSetupState(buttonMode, buttonMode, secret.toString(), RemoteSetupStatus.operationDone);
   }
 }

@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({Key? key}) : super(key: key);
@@ -82,7 +84,8 @@ class _AuthPageState extends State<AuthPage> {
                         Navigator.pushNamed(context, "auth/phoneVerification",
                             arguments: {"phone": _firstController.text}).then((value) {
                           if (value == true) {
-                            //TODO: Move to setup page
+                            context.read<Box>().put("isUserLogin", true);
+                            Navigator.pushReplacementNamed(context, "setup");
                             log("Logged in");
                           }
                         });

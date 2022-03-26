@@ -12,3 +12,11 @@ class BluetoothFindDeviceEvent extends BluetoothEvent {
 
   const BluetoothFindDeviceEvent(this.param);
 }
+
+class BluetoothRequestEnableEvent extends BluetoothEvent {}
+
+class BluetoothConnectEvent extends BluetoothEvent {
+  final plugin.BluetoothDiscoveryResult result;
+
+  const BluetoothConnectEvent(this.result);
+}

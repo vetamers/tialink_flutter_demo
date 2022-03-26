@@ -79,14 +79,15 @@ void main() {
 
   group("setupNewRemote", () {
     test("Stream should work normally", () async {
-      when(remoteSource.sendBytes(ascii.encode("r1m1"))).thenAnswer((_) => () {});
+      when(remoteSource.sendBytes(ascii.encode("r1m1"))).thenAnswer((_) async => (){});
       when(remoteSource.readBytes(any)).thenAnswer((_) async => ascii.encode("da"));
 
       expect(
           repository.setupNewRemote(1, 1),
           emitsInOrder([
-            RemoteSetupStatus.waitingForAction,
-            RemoteSetupStatus.signalReceived,
+            const RemoteSetupState(1,1,"",RemoteSetupStatus.waitingForAction),
+            const RemoteSetupState(1,1,"",RemoteSetupStatus.signalReceived),
+            const RemoteSetupState(1,1,"",RemoteSetupStatus.operationDone),
             emitsDone
           ]));
     });

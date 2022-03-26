@@ -10,6 +10,16 @@ import 'package:tialink/features/bluetooth/presentation/bloc/bluetooth_bloc.dart
 import '../../../../utils/faker.dart';
 import 'bluetooth_bloc_test.mocks.dart';
 
+class FlutterBluetoothMock extends Mock implements bluetooth.FlutterBluetoothSerial {
+  @override
+  Stream<bluetooth.BluetoothState> onStateChanged() async* {
+    yield bluetooth.BluetoothState.STATE_ON;
+  }
+
+  @override
+  Future<bool?> get isEnabled => Future.value(true);
+}
+
 @GenerateMocks([
   FindDeviceByAddress,
   FindDeviceByName
@@ -17,19 +27,19 @@ import 'bluetooth_bloc_test.mocks.dart';
 void main() {
   final MockFindDeviceByAddress findDeviceByAddress = MockFindDeviceByAddress();
   final MockFindDeviceByName findDeviceByName = MockFindDeviceByName();
-  var bluetoothBloc = BluetoothBloc(findDeviceByName, findDeviceByAddress);
+  var bluetoothBloc = BluetoothBloc(FlutterBluetoothMock(),findDeviceByName, findDeviceByAddress);
   var testDiscoveryResult =bluetooth.BluetoothDiscoveryResult(device: fakeBluetoothDevice());
 
   test("Initial test", () {
     expect(bluetoothBloc.isClosed, false);
-    expect(bluetoothBloc.state, BluetoothState.initial());
+    expect(bluetoothBloc.state, BluetoothState.enable());
   });
 
   group("Normal flow test", () {
 
 
     setUp(() {
-      bluetoothBloc = BluetoothBloc(findDeviceByName, findDeviceByAddress);
+      bluetoothBloc = BluetoothBloc(FlutterBluetoothMock(),findDeviceByName, findDeviceByAddress);
       when(findDeviceByName.call(any)).thenAnswer((_) async => Left(testDiscoveryResult));
     });
 

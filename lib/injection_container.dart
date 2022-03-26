@@ -1,5 +1,6 @@
 import 'package:device_info_plus/device_info_plus.dart' as device_info_plugin;
 import 'package:dio/dio.dart';
+import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -14,6 +15,12 @@ import 'package:tialink/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tialink/features/auth/domain/usecases/auth_phone_usecase.dart';
 import 'package:tialink/features/auth/domain/usecases/auth_usecase.dart';
 import 'package:tialink/features/auth/presentation/bloc/phone_auth_bloc.dart';
+import 'package:tialink/features/bluetooth/data/datasources/bluetooth_local_datasource.dart';
+import 'package:tialink/features/bluetooth/data/datasources/bluetooth_remote_datasource.dart';
+import 'package:tialink/features/bluetooth/data/repositories/bluetooth_repository_impl.dart';
+import 'package:tialink/features/bluetooth/domain/repositories/bluetooth_repository.dart';
+import 'package:tialink/features/bluetooth/domain/usecases/bluetooth_find_usecase.dart';
+import 'package:tialink/features/bluetooth/presentation/bloc/bluetooth_bloc.dart';
 import 'env.dart';
 
 Future<void> initInjector() async {
@@ -22,9 +29,12 @@ Future<void> initInjector() async {
   await _registerCoreModules(sl);
 
   _registerAuthFeature(sl);
+  _registerBluetoothFeature(sl);
 }
 
 Future<void> _registerCoreModules(GetIt sl) async {
+  sl.registerSingleton(FlutterBluetoothSerial.instance);
+
   sl.registerSingleton(await PackageInfo.fromPlatform());
   sl.registerSingleton<DeviceInfo>(await DeviceInfoImpl.init(device_info_plugin.DeviceInfoPlugin()));
 
@@ -48,4 +58,17 @@ Future<void> _registerAuthFeature(GetIt sl) async {
   sl.registerLazySingleton(() => LoginWithCredential(sl()));
 
   sl.registerFactory(() => PhoneAuthBloc(sl(), sl()));
+}
+
+Future<void> _registerBluetoothFeature(GetIt sl) async {
+  sl.registerSingleton<BluetoothLocalDataSource>(BluetoothDataSourceImpl(sl()));
+  sl.registerFactoryParam<BluetoothRemoteDataSource, BluetoothConnection, dynamic>(
+      (param1, _) => BluetoothRemoteDataSourceImpl(param1));
+
+  sl.registerSingleton<BluetoothRepository>(BluetoothRepositoryImpl(sl()));
+
+  sl.registerLazySingleton(() => FindDeviceByAddress(sl()));
+  sl.registerLazySingleton(() => FindDeviceByName(sl()));
+
+  sl.registerFactory(() => BluetoothBloc(sl(), sl(), sl()));
 }

@@ -7,8 +7,11 @@ import 'package:tialink/core/bloc_observer.dart';
 import 'package:tialink/features/auth/presentation/bloc/phone_auth_bloc.dart';
 import 'package:tialink/features/auth/presentation/pages/auth_page.dart';
 import 'package:tialink/features/auth/presentation/pages/phone_verification_page.dart';
+import 'package:tialink/features/bluetooth/presentation/pages/bluetooth_device_setup_page.dart';
 import 'package:tialink/features/welcome/presentation/page/welcome_page.dart';
 import 'package:tialink/injection_container.dart';
+
+import 'features/bluetooth/presentation/bloc/bluetooth_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,23 +32,30 @@ class _TiaLinkAppState extends State<TiaLinkApp> {
   Widget build(BuildContext context) {
     var box = GetIt.I<Box>(instanceName: "app_box");
 
-    return MaterialApp(
-      title: "Tialink",
-      color: Colors.blue,
-      debugShowCheckedModeBanner: false,
-      initialRoute: _getInitialRoute(box),
-      routes: {
-        "/": (context) => Text("main"),
-        "welcome": (_) => Provider(
-              create: (_) => box,
-              child: WelcomePage(),
-            ),
-        "auth": (_) => const AuthPage(),
-        "auth/phoneVerification": (_) => BlocProvider(
-              create: (_) => GetIt.I<PhoneAuthBloc>(),
-              child: const PhoneVerificationPage(),
-            ),
-      },
+    return BlocProvider(
+      create: (context) => GetIt.I<BluetoothBloc>(),
+      child: MaterialApp(
+        title: "Tialink",
+        color: Colors.blue,
+        debugShowCheckedModeBanner: false,
+        initialRoute: _getInitialRoute(box),
+        routes: {
+          "/": (context) => Text("main"),
+          "welcome": (_) => Provider(
+                create: (_) => box,
+                child: WelcomePage(),
+              ),
+          "auth": (_) => Provider(
+                create: (_) => box,
+                child: const AuthPage(),
+              ),
+          "auth/phoneVerification": (_) => BlocProvider(
+                create: (_) => GetIt.I<PhoneAuthBloc>(),
+                child: const PhoneVerificationPage(),
+              ),
+          "setup": (context) => const DeviceSetupPage()
+        },
+      ),
     );
   }
 
