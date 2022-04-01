@@ -1,0 +1,83 @@
+name: Flutter
+
+on: [ push, pull_request ]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Flutter setup
+        uses: subosito/flutter-action@v2.3.0
+        with:
+          flutter_version: '2.10.1'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter
+          cache-path: ${{ runner.tool_cache }}/flutter
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name : Build necessary file
+        run: flutter pub run build_runner build
+
+      - name: Analyze project source
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup JAVA
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - name: Flutter setup
+        uses: subosito/flutter-action@v2.3.0
+        with:
+          flutter_version: '2.10.1'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter
+          cache-path: ${{ runner.tool_cache }}/flutter
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name : Build necessary file
+        run: flutter pub run build_runner build
+
+      - name: Build APK
+        run: flutter build apk
+
+      - name: Build AAB
+        run: flutter build appbundle
+
+  test:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Flutter setup
+        uses: subosito/flutter-action@v2.3.0
+        with:
+          flutter_version: '2.10.1'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter
+          cache-path: ${{ runner.tool_cache }}/flutter
+
+      - name: Build project
+        run: flutter pub get && flutter pub run build_runner build
+
+      - name: Run test
+        run: flutter test
