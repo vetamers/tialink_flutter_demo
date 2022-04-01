@@ -8,6 +8,10 @@ import 'package:tialink/features/auth/presentation/bloc/phone_auth_bloc.dart';
 import 'package:tialink/features/auth/presentation/pages/auth_page.dart';
 import 'package:tialink/features/auth/presentation/pages/phone_verification_page.dart';
 import 'package:tialink/features/bluetooth/presentation/pages/bluetooth_device_setup_page.dart';
+import 'package:tialink/features/main/domain/usecases/main_usecase.dart';
+import 'package:tialink/features/main/presentation/bloc/main_bloc.dart';
+import 'package:tialink/features/main/presentation/pages/main_edit_page.dart';
+import 'package:tialink/features/main/presentation/pages/main_page.dart';
 import 'package:tialink/features/welcome/presentation/page/welcome_page.dart';
 import 'package:tialink/injection_container.dart';
 
@@ -40,7 +44,14 @@ class _TiaLinkAppState extends State<TiaLinkApp> {
         debugShowCheckedModeBanner: false,
         initialRoute: _getInitialRoute(box),
         routes: {
-          "/": (context) => Text("main"),
+          "/": (_) => BlocProvider(
+            create: (_) => GetIt.I<MainBloc>(),
+            child: const MainPage(),
+          ),
+          "/edit": (_) => BlocProvider(
+            create: (_) => GetIt.I<MainBloc>(),
+            child: const HomeEditPage(),
+          ),
           "welcome": (_) => Provider(
                 create: (_) => box,
                 child: WelcomePage(),
@@ -53,7 +64,9 @@ class _TiaLinkAppState extends State<TiaLinkApp> {
                 create: (_) => GetIt.I<PhoneAuthBloc>(),
                 child: const PhoneVerificationPage(),
               ),
-          "setup": (context) => const DeviceSetupPage()
+          "setup": (context) => MultiProvider(
+              providers: [Provider(create: (_) => box), Provider(create: (_) => GetIt.I<AddHome>())],
+              child: const DeviceSetupPage())
         },
       ),
     );
@@ -64,7 +77,7 @@ class _TiaLinkAppState extends State<TiaLinkApp> {
       return "welcome";
     } else if (!box.get("isUserLogin", defaultValue: false)) {
       return "auth";
-    } else if (!box.get("isSetupPage", defaultValue: false)) {
+    } else if (!box.get("isSetupPageSkipped", defaultValue: false)) {
       return "setup";
     } else {
       return "/";

@@ -1,17 +1,20 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get_it/get_it.dart';
 import 'package:im_stepper/stepper.dart';
 import 'package:tialink/core/utils.dart';
 import 'package:tialink/features/bluetooth/domain/repositories/bluetooth_repository.dart';
+import 'package:tialink/features/main/domain/usecases/main_usecase.dart';
 
 import '../../domain/entities/bluetooth_entities.dart';
+import '../bloc/bluetooth_bloc.dart';
 
 class RemoteConfigView extends StatefulWidget {
-  final VoidCallback onDone;
+  final void Function(AddHomeParam param) onDone;
   const RemoteConfigView({Key? key, required this.onDone}) : super(key: key);
 
   @override
@@ -22,6 +25,7 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
   WidgetsBinding? _binding;
   int? buttonMode;
   int? currentStep;
+  String? secret;
   bool configDone = false;
 
   @override
@@ -45,6 +49,7 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
               return _progressBar();
             case ConnectionState.active:
               var data = snapshot.data as RemoteSetupState;
+              secret = data.secret;
               log(data.toString());
               switch (data.status) {
                 case RemoteSetupStatus.waitingForAction:
@@ -101,9 +106,6 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
                     border: OutlineInputBorder(), label: Text("Home label"), prefixIcon: Icon(Icons.home)),
                 maxLength: 32,
                 maxLines: 1,
-                onFieldSubmitted: (s) {
-                  _form.currentState!.validate();
-                },
                 validator: (s) {
                   if (s!.length < 3) {
                     return "Label must at least 3 characters";
@@ -118,7 +120,9 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
             child: FloatingActionButton.extended(
               onPressed: () {
                 if (_form.currentState!.validate()) {
-                  widget.onDone();
+                  var deviceMac = context.read<BluetoothBloc>().device!.address;
+                  var param = AddHomeParam.full(_labelField.currentState!.value, deviceMac , secret!, "Main", buttonMode!);
+                  widget.onDone(param);
                 }
               },
               label: const Text("Done"),

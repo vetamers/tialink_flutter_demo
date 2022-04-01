@@ -19,11 +19,18 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
   @override
   set remoteSource(BluetoothRemoteDataSource remoteDataSource) {
     _remoteDataSource = remoteDataSource;
-    log("RemoteDataSource was set");
+    log("RemoteDataSource attached");
+    _remoteDataSource!.isConnected.listen((event) {
+      if (!event) {
+        _remoteDataSource = null;
+        log("RemoteDataSource detached");
+      }
+    });
   }
 
   @override
-  Future<Either<BluetoothConnection, BluetoothConnectException>> connect(BluetoothDevice device) async {
+  Future<Either<BluetoothConnection, BluetoothConnectException>> connect(
+      BluetoothDevice device) async {
     try {
       var response = await _localDataSource.connect(device.address);
       return Left(response);
@@ -33,8 +40,8 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
   }
 
   @override
-  Future<Either<BluetoothDiscoveryResult, BluetoothTargetNotFound>> findTiaLinkDeviceWithAddress(
-      String address) async {
+  Future<Either<BluetoothDiscoveryResult, BluetoothTargetNotFound>>
+      findTiaLinkDeviceWithAddress(String address) async {
     try {
       var response = await _localDataSource.find(address: address);
       return Left(response);
@@ -44,8 +51,8 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
   }
 
   @override
-  Future<Either<BluetoothDiscoveryResult, BluetoothTargetNotFound>> findTiaLinkDeviceWithName(
-      String name) async {
+  Future<Either<BluetoothDiscoveryResult, BluetoothTargetNotFound>>
+      findTiaLinkDeviceWithName(String name) async {
     try {
       var response = await _localDataSource.find(name: name);
       return Left(response);
@@ -55,19 +62,27 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
   }
 
   @override
+  Stream<bool> get isRemoteSourceConnected => _remoteDataSource == null
+      ? Stream.value(false)
+      : _remoteDataSource!.isConnected;
+
+  @override
   Stream<RemoteSetupState> setupNewRemote(int buttonMode, int remoteNumber) async* {
     var secret = randomInt(8);
-    await _remoteDataSource!
-        .sendBytes(TransferProtocol.newRemoteSetupMessage(buttonMode, remoteNumber).binary);
+    await _remoteDataSource!.sendBytes(
+        TransferProtocol.newRemoteSetupMessage(buttonMode, remoteNumber).binary);
 
     for (int i = 1; i <= buttonMode; i++) {
-      var expectedMessage = TransferProtocol.successfulMessage(RemoteButton.values[i - 1]).message;
-      yield RemoteSetupState(buttonMode, i, secret.toString(), RemoteSetupStatus.waitingForAction);
+      var expectedMessage =
+          TransferProtocol.successfulMessage(RemoteButton.values[i - 1]).message;
+      yield RemoteSetupState(
+          buttonMode, i, secret.toString(), RemoteSetupStatus.waitingForAction);
       var bytes = await _remoteDataSource!.readBytes(expectedMessage.length);
       var message = TransferProtocol.binaryToString(bytes);
 
       if (message == expectedMessage) {
-        yield RemoteSetupState(buttonMode, i, secret.toString(), RemoteSetupStatus.signalReceived);
+        yield RemoteSetupState(
+            buttonMode, i, secret.toString(), RemoteSetupStatus.signalReceived);
         await Future.delayed(const Duration(seconds: 1));
       } else {
         throw BluetoothUnExpectedMessage(expectedMessage, message);
@@ -75,6 +90,7 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
     }
 
     await _remoteDataSource!.sendBytes(TransferProtocol.uniqueKey(secret).binary);
-    yield RemoteSetupState(buttonMode, buttonMode, secret.toString(), RemoteSetupStatus.operationDone);
+    yield RemoteSetupState(
+        buttonMode, buttonMode, secret.toString(), RemoteSetupStatus.operationDone);
   }
 }

@@ -20,3 +20,11 @@ class BluetoothConnectEvent extends BluetoothEvent {
 
   const BluetoothConnectEvent(this.result);
 }
+
+class BluetoothExecuteRemoteEvent extends BluetoothEvent {
+  final Home home;
+  final Door door;
+  final RemoteButton button;
+
+  const BluetoothExecuteRemoteEvent(this.home, this.door, this.button);
+}

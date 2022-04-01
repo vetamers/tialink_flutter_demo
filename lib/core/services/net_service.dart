@@ -1,9 +1,11 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:tialink/core/platform/device_info.dart';
+import 'package:tialink/features/auth/domain/repositories/auth_repository.dart';
 
 abstract class NetService {
   Dio get dio;
@@ -34,8 +36,6 @@ class NetServiceImpl implements NetService {
           requestHeader: false, responseHeader: false, responseBody: true, logPrint: (_) => log));
     }
 
-    //TODO: Add auth interceptor
-
     return dio;
   }
 
@@ -45,4 +45,21 @@ class NetServiceImpl implements NetService {
 
   @override
   Dio get dio => _getDioClient();
+}
+
+class AuthInterceptor extends Interceptor {
+  final AuthRepository _authRepository;
+
+  AuthInterceptor(this._authRepository);
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    var certificate = _authRepository.getToken();
+
+    certificate.fold((l) {
+      options.headers.addAll({HttpHeaders.authorizationHeader: "Bearer ${l.token}"});
+    }, (r) => null);
+
+    super.onRequest(options, handler);
+  }
 }

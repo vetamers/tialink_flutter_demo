@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:hive/hive.dart';
 import 'package:im_stepper/stepper.dart';
 import 'package:tialink/features/bluetooth/presentation/widgets/setup_find_device.dart';
 import 'package:tialink/features/bluetooth/presentation/widgets/setup_select_role.dart';
+import 'package:tialink/features/main/domain/usecases/main_usecase.dart';
 import 'package:tialink/features/permission/presentation/bloc/permission_bloc.dart';
 import 'package:tuple/tuple.dart';
 
@@ -132,8 +135,12 @@ class _DeviceSetupPageState extends State<DeviceSetupPage> {
       case 2:
         if (currentRole == 0) {
           return RemoteConfigView(
-            onDone: () {
-              Navigator.pushReplacementNamed(context, '/');
+            onDone: (param) {
+              GetIt.I<AddHome>()(param).then((value) {
+                context.read<Box>().put("isSetupPageSkipped", true).then((_) {
+                  Navigator.pushReplacementNamed(context, '/');
+                });
+              });
             },
           );
         } else {
@@ -152,13 +159,18 @@ class _DeviceSetupPageState extends State<DeviceSetupPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text("Your done.",style: TextStyle(fontSize: 19),),
+          const Text(
+            "Your done.",
+            style: TextStyle(fontSize: 19),
+          ),
           const Expanded(child: SizedBox()),
           Align(
             alignment: Alignment.center,
             child: FloatingActionButton.extended(
-              onPressed: (){
-                Navigator.pushReplacementNamed(context, '/');
+              onPressed: () {
+                context.read<Box>().put("isSetupPageSkipped", true).then((_) {
+                  Navigator.pushReplacementNamed(context, '/');
+                });
               },
               label: const Text("Finish"),
               icon: const Icon(Icons.done),

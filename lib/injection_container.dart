@@ -21,6 +21,12 @@ import 'package:tialink/features/bluetooth/data/repositories/bluetooth_repositor
 import 'package:tialink/features/bluetooth/domain/repositories/bluetooth_repository.dart';
 import 'package:tialink/features/bluetooth/domain/usecases/bluetooth_find_usecase.dart';
 import 'package:tialink/features/bluetooth/presentation/bloc/bluetooth_bloc.dart';
+import 'package:tialink/features/main/data/datasources/main_localsource.dart';
+import 'package:tialink/features/main/data/datasources/main_remotesource.dart';
+import 'package:tialink/features/main/data/repositories/main_repository_impl.dart';
+import 'package:tialink/features/main/domain/repositories/main_repository.dart';
+import 'package:tialink/features/main/domain/usecases/main_usecase.dart';
+import 'package:tialink/features/main/presentation/bloc/main_bloc.dart';
 import 'env.dart';
 
 Future<void> initInjector() async {
@@ -30,6 +36,7 @@ Future<void> initInjector() async {
 
   _registerAuthFeature(sl);
   _registerBluetoothFeature(sl);
+  await _registerMainFeature(sl);
 }
 
 Future<void> _registerCoreModules(GetIt sl) async {
@@ -58,6 +65,8 @@ Future<void> _registerAuthFeature(GetIt sl) async {
   sl.registerLazySingleton(() => LoginWithCredential(sl()));
 
   sl.registerFactory(() => PhoneAuthBloc(sl(), sl()));
+
+  sl<Dio>().interceptors.add(AuthInterceptor(sl()));
 }
 
 Future<void> _registerBluetoothFeature(GetIt sl) async {
@@ -71,4 +80,17 @@ Future<void> _registerBluetoothFeature(GetIt sl) async {
   sl.registerLazySingleton(() => FindDeviceByName(sl()));
 
   sl.registerFactory(() => BluetoothBloc(sl(), sl(), sl()));
+}
+
+Future<void> _registerMainFeature(GetIt sl) async {
+  sl.registerSingleton<MainRemoteSource>(MainRemoteSourceImpl(sl()));
+  sl.registerSingleton<MainLocalSource>(MainLocalSourceImpl(await Hive.openBox("main")));
+
+  sl.registerSingleton<MainRepository>(MainRepositoryImpl(sl(), sl()));
+
+  sl.registerSingleton(GetHomes(sl()));
+  sl.registerSingleton(AddHome(sl()));
+  sl.registerSingleton(UpdateHome(sl()));
+
+  sl.registerFactory(() => MainBloc(sl()));
 }
