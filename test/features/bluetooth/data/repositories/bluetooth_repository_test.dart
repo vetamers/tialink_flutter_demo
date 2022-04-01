@@ -21,6 +21,9 @@ void main() {
   var localSource = MockBluetoothLocalDataSource();
   var remoteSource = MockBluetoothRemoteDataSource();
   var repository = BluetoothRepositoryImpl(localSource);
+
+  when(remoteSource.isConnected).thenAnswer((_) => Stream.value(true));
+
   repository.remoteSource = remoteSource;
 
   group("connect", () {
