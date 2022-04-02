@@ -19,6 +19,7 @@ import 'package:tialink/features/bluetooth/data/datasources/bluetooth_local_data
 import 'package:tialink/features/bluetooth/data/datasources/bluetooth_remote_datasource.dart';
 import 'package:tialink/features/bluetooth/data/repositories/bluetooth_repository_impl.dart';
 import 'package:tialink/features/bluetooth/domain/repositories/bluetooth_repository.dart';
+import 'package:tialink/features/bluetooth/domain/usecases/bluetooth_execute_usecase.dart';
 import 'package:tialink/features/bluetooth/domain/usecases/bluetooth_find_usecase.dart';
 import 'package:tialink/features/bluetooth/presentation/bloc/bluetooth_bloc.dart';
 import 'package:tialink/features/main/data/datasources/main_localsource.dart';
@@ -79,7 +80,9 @@ Future<void> _registerBluetoothFeature(GetIt sl) async {
   sl.registerLazySingleton(() => FindDeviceByAddress(sl()));
   sl.registerLazySingleton(() => FindDeviceByName(sl()));
 
-  sl.registerFactory(() => BluetoothBloc(sl(), sl(), sl()));
+  sl.registerSingleton(ExecuteCommand(sl()));
+
+  sl.registerFactory(() => BluetoothBloc(sl(), sl(), sl(),sl()));
 }
 
 Future<void> _registerMainFeature(GetIt sl) async {

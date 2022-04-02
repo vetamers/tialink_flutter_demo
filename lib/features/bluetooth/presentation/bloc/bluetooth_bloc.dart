@@ -1,12 +1,15 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart' as plugin;
 import 'package:get_it/get_it.dart';
 import 'package:tialink/features/bluetooth/data/datasources/bluetooth_remote_datasource.dart';
+import 'package:tialink/features/bluetooth/data/models/bluetooth_models.dart';
 import 'package:tialink/features/bluetooth/domain/entities/bluetooth_entities.dart';
 import 'package:tialink/features/bluetooth/domain/repositories/bluetooth_repository.dart';
+import 'package:tialink/features/bluetooth/domain/usecases/bluetooth_execute_usecase.dart';
 import 'package:tialink/features/bluetooth/domain/usecases/bluetooth_find_usecase.dart';
 import 'package:tialink/features/main/domain/entities/main_entities.dart';
 
@@ -20,9 +23,11 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
   final FindDeviceByName findDeviceByName;
   final FindDeviceByAddress findDeviceByAddress;
 
+  final ExecuteCommand executeCommand;
+
   plugin.BluetoothDevice? device;
 
-  BluetoothBloc(this._serial, this.findDeviceByName, this.findDeviceByAddress)
+  BluetoothBloc(this._serial, this.findDeviceByName, this.findDeviceByAddress, this.executeCommand)
       : super(BluetoothState.initial()) {
     _checkIsBluetoothEnable();
 
@@ -48,7 +53,7 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
     on<BluetoothFindDeviceEvent>(_findDevice);
     on<BluetoothConnectEvent>(_connect);
 
-    on<BluetoothExecuteRemoteEvent>(_executeRemote);
+    on<BluetoothExecuteRemoteEvent>(_executeRemote,transformer: droppable());
   }
 
   void _findDevice(
@@ -109,8 +114,13 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
     }
   }
 
-  void _executeRemote(
-      BluetoothExecuteRemoteEvent event, Emitter<BluetoothState> emit) {
-    //TODO: Complete this section
+  void _executeRemote(BluetoothExecuteRemoteEvent event, Emitter<BluetoothState> emit) async {
+    var transferProtocol = TransferProtocol.executeButton(
+        event.button,
+        event.home.doors.indexOf(event.door) + 1,
+        event.home.device.secret
+    );
+
+    await executeCommand(ExecuteCommandParam(transferProtocol));
   }
 }

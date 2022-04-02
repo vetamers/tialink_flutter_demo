@@ -2,6 +2,8 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class UseCase<L,R,P extends UseCaseParam> {
+  //TODO: Add repository getter
+
   Future<Either<L,R>> call(P param);
 }
 

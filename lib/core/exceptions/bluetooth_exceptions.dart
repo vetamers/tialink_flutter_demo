@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:tialink/features/bluetooth/data/models/bluetooth_models.dart';
 
 class BluetoothException extends ErrorDescription {
   final String code;
@@ -37,4 +38,10 @@ class BluetoothUnExpectedMessage extends BluetoothException {
   BluetoothUnExpectedMessage(String expected, String actual)
       : super("UNEXPECTED_MESSAGE",
             "Unexpected message.\nExpected: $expected\nActual: $actual");
+}
+
+class BluetoothSendBytesException extends BluetoothException {
+  BluetoothSendBytesException(TransferProtocol transferProtocol)
+      : super("SEND_FAILED",
+            "Error while send bytes\nBytes: ${transferProtocol.binary}\nString: ${transferProtocol.message}");
 }

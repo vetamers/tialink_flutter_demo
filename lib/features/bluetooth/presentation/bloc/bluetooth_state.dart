@@ -10,7 +10,7 @@ enum BluetoothStatus {
   connecting,
   connected,
   connectionFailed,
-  disconnected
+  disconnected,
 }
 
 class BluetoothState extends Equatable {

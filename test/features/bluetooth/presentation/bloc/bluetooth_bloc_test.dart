@@ -4,6 +4,7 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart' as bluet
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:tialink/features/bluetooth/domain/usecases/bluetooth_execute_usecase.dart';
 import 'package:tialink/features/bluetooth/domain/usecases/bluetooth_find_usecase.dart';
 import 'package:tialink/features/bluetooth/presentation/bloc/bluetooth_bloc.dart';
 
@@ -22,12 +23,15 @@ class FlutterBluetoothMock extends Mock implements bluetooth.FlutterBluetoothSer
 
 @GenerateMocks([
   FindDeviceByAddress,
-  FindDeviceByName
+  FindDeviceByName,
+  ExecuteCommand
 ])
 void main() {
   final MockFindDeviceByAddress findDeviceByAddress = MockFindDeviceByAddress();
   final MockFindDeviceByName findDeviceByName = MockFindDeviceByName();
-  var bluetoothBloc = BluetoothBloc(FlutterBluetoothMock(),findDeviceByName, findDeviceByAddress);
+  final MockExecuteCommand executeCommand = MockExecuteCommand();
+
+  var bluetoothBloc = BluetoothBloc(FlutterBluetoothMock(),findDeviceByName, findDeviceByAddress,executeCommand);
   var testDiscoveryResult =bluetooth.BluetoothDiscoveryResult(device: fakeBluetoothDevice());
 
   test("Initial test", () {
@@ -39,7 +43,7 @@ void main() {
 
 
     setUp(() {
-      bluetoothBloc = BluetoothBloc(FlutterBluetoothMock(),findDeviceByName, findDeviceByAddress);
+      bluetoothBloc = BluetoothBloc(FlutterBluetoothMock(),findDeviceByName, findDeviceByAddress,executeCommand);
       when(findDeviceByName.call(any)).thenAnswer((_) async => Left(testDiscoveryResult));
     });
 

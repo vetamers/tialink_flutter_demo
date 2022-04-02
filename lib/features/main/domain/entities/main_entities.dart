@@ -13,6 +13,7 @@ abstract class Home extends BaseEntity {
 
 abstract class Device extends BaseEntity {
   String get macAddress;
+  String get secret; //TODO: Implement other method
   String get masterId;
 
   @override
@@ -23,4 +24,7 @@ abstract class Door extends BaseEntity {
   String get label;
   String get homeId;
   int get buttonMode;
+
+  @override
+  List<Object?> get props => [uuid,label];
 }

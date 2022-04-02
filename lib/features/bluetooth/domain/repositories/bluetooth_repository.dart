@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:tialink/core/exceptions/bluetooth_exceptions.dart';
+import 'package:tialink/features/bluetooth/data/models/bluetooth_models.dart';
 import 'package:tialink/features/bluetooth/domain/entities/bluetooth_entities.dart';
 
 import '../../data/datasources/bluetooth_remote_datasource.dart';
@@ -19,4 +20,6 @@ abstract class BluetoothRepository {
   Stream<bool> get isRemoteSourceConnected;
 
   Stream<RemoteSetupState> setupNewRemote(int buttonMode, int remoteNumber);
+
+  Future<Either<void,BluetoothSendBytesException>> sendCommand(TransferProtocol transferProtocol);
 }

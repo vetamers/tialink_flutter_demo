@@ -93,4 +93,15 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
     yield RemoteSetupState(
         buttonMode, buttonMode, secret.toString(), RemoteSetupStatus.operationDone);
   }
+
+  @override
+  Future<Either<void, BluetoothSendBytesException>> sendCommand(TransferProtocol transferProtocol) async {
+    assert(_remoteDataSource != null);
+
+    try {
+      return left(_remoteDataSource!.sendBytes(transferProtocol.binary));
+    }catch (e) {
+      return right(BluetoothSendBytesException(transferProtocol));
+    }
+  }
 }

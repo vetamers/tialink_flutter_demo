@@ -41,6 +41,9 @@ class DeviceModel extends Device {
   @override
   final String macAddress;
 
+  @override
+  final String secret;
+
   @JsonKey(name: "master_id")
   @override
   final String masterId;
@@ -53,7 +56,7 @@ class DeviceModel extends Device {
   @override
   final DateTime? updatedAt;
 
-  DeviceModel._(this.uuid, this.macAddress, this.masterId, this.createdAt, this.updatedAt);
+  DeviceModel._(this.uuid, this.macAddress,this.secret, this.masterId, this.createdAt, this.updatedAt);
   factory DeviceModel.fromJson(Map<String, dynamic> json) => _$DeviceModelFromJson(json);
   Map<String, dynamic> toJson() => _$DeviceModelToJson(this);
 }
