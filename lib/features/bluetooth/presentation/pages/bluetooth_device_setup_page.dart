@@ -1,10 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import 'package:im_stepper/stepper.dart';
+import 'package:tialink/features/bluetooth/domain/entities/bluetooth_entities.dart';
 import 'package:tialink/features/bluetooth/presentation/widgets/setup_find_device.dart';
 import 'package:tialink/features/bluetooth/presentation/widgets/setup_select_role.dart';
+import 'package:tialink/features/main/domain/entities/main_entities.dart';
 import 'package:tialink/features/main/domain/usecases/main_usecase.dart';
 import 'package:tialink/features/permission/presentation/bloc/permission_bloc.dart';
 import 'package:tuple/tuple.dart';
@@ -12,7 +16,8 @@ import 'package:tuple/tuple.dart';
 import '../widgets/config_device_view.dart';
 
 class DeviceSetupPage extends StatefulWidget {
-  const DeviceSetupPage({Key? key}) : super(key: key);
+  final BluetoothDeviceSetupArgs? args;
+  const DeviceSetupPage({Key? key, this.args}) : super(key: key);
 
   @override
   State<DeviceSetupPage> createState() => _DeviceSetupPageState();
@@ -23,45 +28,51 @@ class _DeviceSetupPageState extends State<DeviceSetupPage> {
     Tuple2("Master", "I'm master of home and i want to config device for my home"),
     Tuple2("Slave", "I'm slave and i want to use tialink device")
   ];
+
   int currentRole = 0;
-  final List<Tuple2<Icon, String>> masterSteps = const [
-    Tuple2(
+  final List<Tuple3<String, Icon, String>> masterSteps = const [
+    Tuple3(
+        "select_role",
         Icon(
           Icons.account_circle,
           color: Colors.white,
         ),
         "Select Role"),
-    Tuple2(
+    Tuple3(
+        "connect_device",
         Icon(
           Icons.bluetooth,
           color: Colors.white,
         ),
         "Connecting to device"),
-    Tuple2(
+    Tuple3(
+        "remotes",
         Icon(
           Icons.settings_rounded,
           color: Colors.white,
         ),
         "Setup remotes"),
   ];
-  final List<Tuple2<Icon, String>> slaveSteps = const [
-    Tuple2(
-        Icon(
-          Icons.account_circle,
-          color: Colors.white,
-        ),
-        "Select role"),
-    Tuple2(
-        Icon(
-          Icons.done,
-          color: Colors.white,
-        ),
-        "Done")
-  ];
+
+  List<Tuple3<String, Icon, String>> get slaveSteps => [
+        masterSteps[0],
+        const Tuple3(
+            "done",
+            Icon(
+              Icons.done,
+              color: Colors.white,
+            ),
+            "Done")
+      ];
+
   int currentStep = 0;
 
   @override
   Widget build(BuildContext context) {
+    var args = widget.args ??
+        ModalRoute.of(context)!.settings.arguments as BluetoothDeviceSetupArgs;
+    log(args.toString());
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -76,7 +87,7 @@ class _DeviceSetupPageState extends State<DeviceSetupPage> {
         children: [
           IconStepper(
               activeStep: currentStep,
-              icons: _getStepsList().map((e) => e.item1).toList(),
+              icons: _getStepsList(args.mode).map((e) => e.item2).toList(),
               enableNextPreviousButtons: false,
               enableStepTapping: false,
               activeStepColor: Colors.blue),
@@ -87,7 +98,7 @@ class _DeviceSetupPageState extends State<DeviceSetupPage> {
             children: [
               Text("Step ${currentStep + 1}"),
               Text(
-                _getStepsList()[currentStep].item2,
+                _getStepsList(args.mode)[currentStep].item3,
                 style: Theme.of(context).textTheme.headline6,
               )
             ],
@@ -95,15 +106,15 @@ class _DeviceSetupPageState extends State<DeviceSetupPage> {
           const SizedBox(
             height: 20,
           ),
-          Expanded(child: _getStep(currentStep))
+          Expanded(child: _getStep(_getStepsList(args.mode)[currentStep], args))
         ],
       ),
     );
   }
 
-  Widget _getStep(int currentStep) {
-    switch (currentStep) {
-      case 0:
+  Widget _getStep(Tuple3<String, Icon, String> step, BluetoothDeviceSetupArgs args) {
+    switch (step.item1) {
+      case "select_role":
         return SelectRoleStep(
           roles: rolesList,
           onRoleChange: (value) {
@@ -113,45 +124,57 @@ class _DeviceSetupPageState extends State<DeviceSetupPage> {
           },
           onDone: () {
             setState(() {
-              this.currentStep++;
+              currentStep++;
             });
           },
         );
-      case 1:
-        if (currentRole == 0) {
-          return BlocProvider(
-            create: (context) => PermissionBloc(),
-            child: FindDeviceSetup(
-              onDone: () {
-                setState(() {
-                  this.currentStep++;
-                });
-              },
-            ),
-          );
-        } else {
-          return _slaveDone();
-        }
-      case 2:
-        if (currentRole == 0) {
-          return RemoteConfigView(
-            onDone: (param) {
-              GetIt.I<AddHome>()(param).then((value) {
+      case "done":
+        return _slaveDone();
+      case "connect_device":
+        return BlocProvider(
+          create: (context) => PermissionBloc(),
+          child: FindDeviceSetup(
+            onDone: () {
+              setState(() {
+                currentStep++;
+              });
+            },
+          ),
+        );
+      case "remotes":
+        return RemoteConfigView(
+          isDoorOnly: args.mode == SetupMode.onlyDoor,
+          remoteNumber: args.metadata.containsKey("home")
+              ? (args.metadata["home"] as Home).doors.length + 1
+              : 1,
+          onDone: (param) {
+            if (args.mode == SetupMode.onlyDoor) {
+              GetIt.I<AddDoor>()(AddDoorParam(
+                      args.metadata["home"].uuid, param["label"], param["mode"]))
+                  .then((value) {
+                Navigator.pop(context, true);
+              });
+            } else {
+              GetIt.I<AddHome>()(param as AddHomeParam).then((value) {
                 context.read<Box>().put("isSetupPageSkipped", true).then((_) {
                   Navigator.pushReplacementNamed(context, '/');
                 });
               });
-            },
-          );
-        } else {
-          throw ErrorDescription("Illegal state");
-        }
+            }
+          },
+        );
       default:
         throw ErrorDescription("Illegal step");
     }
   }
 
-  List<Tuple2<Icon, String>> _getStepsList() => currentRole == 0 ? masterSteps : slaveSteps;
+  List<Tuple3<String, Icon, String>> _getStepsList(SetupMode mode) {
+    if (mode == SetupMode.onlyDoor) {
+      return [masterSteps[1], masterSteps[2]];
+    } else {
+      return currentRole == 0 ? masterSteps : slaveSteps;
+    }
+  }
 
   Widget _slaveDone() {
     return Container(

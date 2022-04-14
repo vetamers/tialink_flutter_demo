@@ -26,14 +26,11 @@ class _FindDeviceSetupState extends State<FindDeviceSetup> {
     if (permissionBloc.state == PermissionState.granted(Permission.location)) {
       return _main();
     } else {
-      return BlocProvider(
-        create: (context) => permissionBloc,
-        child: PermissionView(
-          permissionCode: Permission.location.value,
-          onPermissionGranted: () {
-            setState(() {});
-          },
-        ),
+      return PermissionView(
+        permissionCode: Permission.location.value,
+        onPermissionGranted: () {
+          setState(() {});
+        },
       );
     }
   }
@@ -66,6 +63,11 @@ class _FindDeviceSetupState extends State<FindDeviceSetup> {
             return _disable();
           case BluetoothStatus.connecting:
             return _connecting(state.metadata["result"]);
+          case BluetoothStatus.connected:
+            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+              widget.onDone();
+            });
+            return SizedBox();
           default:
             return Text("Not implemented: ${state.value}");
         }

@@ -29,7 +29,7 @@ class TransferProtocol extends Equatable {
     return TransferProtocol._(message);
   }
 
-  factory TransferProtocol.uniqueKey(int key) {
+  factory TransferProtocol.uniqueKey(String key) {
     var message = key.toString(); //Ex. '12345678'
     assert(message.length == 8);
     return TransferProtocol._(message.toString());

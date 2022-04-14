@@ -7,13 +7,16 @@ class PermissionView extends StatefulWidget {
   final int permissionCode;
   final VoidCallback? onPermissionGranted;
 
-  const PermissionView({required this.permissionCode, this.onPermissionGranted, Key? key}) : super(key: key);
+  const PermissionView(
+      {required this.permissionCode, this.onPermissionGranted, Key? key})
+      : super(key: key);
 
   @override
   _PermissionViewState createState() => _PermissionViewState();
 }
 
-class _PermissionViewState extends State<PermissionView> with WidgetsBindingObserver {
+class _PermissionViewState extends State<PermissionView>
+    with WidgetsBindingObserver {
   WidgetsBinding? _widgetsBinding;
 
   @override
@@ -23,7 +26,8 @@ class _PermissionViewState extends State<PermissionView> with WidgetsBindingObse
 
     var bloc = context.read<PermissionBloc>();
     if (bloc.state.value == PermissionStatus.initial) {
-      bloc.add(PermissionCheckEvent(plugin.Permission.byValue(widget.permissionCode)));
+      bloc.add(
+          PermissionCheckEvent(plugin.Permission.byValue(widget.permissionCode)));
     }
 
     super.initState();
@@ -60,7 +64,8 @@ class _PermissionViewState extends State<PermissionView> with WidgetsBindingObse
             ));
             break;
           default:
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.value.toString())));
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(state.value.toString())));
         }
       },
       builder: (context, state) {
@@ -83,13 +88,13 @@ class _PermissionViewState extends State<PermissionView> with WidgetsBindingObse
   Widget _permissionRequestUI() {
     return AlertDialog(
         title: const Text("Permission Needed"),
-        content: const Text("We need location permission for searching your nearby bluetooth devices"),
+        content: const Text(
+            "We need location permission for searching your nearby bluetooth devices"),
         actions: [
           TextButton(
               onPressed: () {
-                context
-                    .read<PermissionBloc>()
-                    .add(PermissionRequestEvent(plugin.Permission.byValue(widget.permissionCode)));
+                context.read<PermissionBloc>().add(PermissionRequestEvent(
+                    plugin.Permission.byValue(widget.permissionCode)));
               },
               child: const Text("OK"))
         ]);
@@ -112,9 +117,8 @@ class _PermissionViewState extends State<PermissionView> with WidgetsBindingObse
               onPressed: () => {
                     isPermanentlyDenied
                         ? plugin.openAppSettings()
-                        : context
-                            .read<PermissionBloc>()
-                            .add(PermissionRequestEvent(plugin.Permission.byValue(widget.permissionCode)))
+                        : context.read<PermissionBloc>().add(PermissionRequestEvent(
+                            plugin.Permission.byValue(widget.permissionCode)))
                   },
               icon: Icon(isPermanentlyDenied ? Icons.settings : Icons.security),
               label: Text(isPermanentlyDenied ? "Open Setting" : "Give Permission"))
@@ -126,8 +130,10 @@ class _PermissionViewState extends State<PermissionView> with WidgetsBindingObse
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     var bloc = context.read<PermissionBloc>();
-    if (state == AppLifecycleState.resumed && bloc.state.value == PermissionStatus.permanentlyDenied) {
-      bloc.add(PermissionRequestEvent(plugin.Permission.byValue(widget.permissionCode)));
+    if (state == AppLifecycleState.resumed &&
+        bloc.state.value == PermissionStatus.permanentlyDenied) {
+      bloc.add(
+          PermissionRequestEvent(plugin.Permission.byValue(widget.permissionCode)));
     }
   }
 }

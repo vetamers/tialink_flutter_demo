@@ -44,20 +44,25 @@ Future<void> _registerCoreModules(GetIt sl) async {
   sl.registerSingleton(FlutterBluetoothSerial.instance);
 
   sl.registerSingleton(await PackageInfo.fromPlatform());
-  sl.registerSingleton<DeviceInfo>(await DeviceInfoImpl.init(device_info_plugin.DeviceInfoPlugin()));
+  sl.registerSingleton<DeviceInfo>(
+      await DeviceInfoImpl.init(device_info_plugin.DeviceInfoPlugin()));
 
-  sl.registerSingleton<StorageService>(await StorageServiceImpl.instance(const FlutterSecureStorage()),
+  sl.registerSingleton<StorageService>(
+      await StorageServiceImpl.instance(const FlutterSecureStorage()),
       dispose: (o) => o.dispose());
 
-  sl.registerSingleton<NetService>(NetServiceImpl(sl(), sl(), apiUrl: API.apiBaseUrl));
+  sl.registerSingleton<NetService>(
+      NetServiceImpl(sl(), sl(), apiUrl: API.apiBaseUrl));
   sl.registerSingleton<Dio>(sl<NetService>().dio);
 
   sl.registerSingleton<Box>(await Hive.openBox("app"), instanceName: "app_box");
-  sl.registerSingleton<Box>(await sl<StorageService>().secureBox("auth"), instanceName: "auth_box");
+  sl.registerSingleton<Box>(await sl<StorageService>().secureBox("auth"),
+      instanceName: "auth_box");
 }
 
 Future<void> _registerAuthFeature(GetIt sl) async {
-  sl.registerLazySingleton<AuthLocalSource>(() => AuthLocalSourceImpl(sl(instanceName: "auth_box")));
+  sl.registerLazySingleton<AuthLocalSource>(
+      () => AuthLocalSourceImpl(sl(instanceName: "auth_box")));
   sl.registerLazySingleton<AuthRemoteSource>(() => AuthRemoteSourceImpl(sl()));
 
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl(), sl()));
@@ -82,18 +87,19 @@ Future<void> _registerBluetoothFeature(GetIt sl) async {
 
   sl.registerSingleton(ExecuteCommand(sl()));
 
-  sl.registerFactory(() => BluetoothBloc(sl(), sl(), sl(),sl()));
+  sl.registerFactory(() => BluetoothBloc(sl(), sl(), sl(), sl()));
 }
 
 Future<void> _registerMainFeature(GetIt sl) async {
   sl.registerSingleton<MainRemoteSource>(MainRemoteSourceImpl(sl()));
-  sl.registerSingleton<MainLocalSource>(MainLocalSourceImpl(await Hive.openBox("main")));
+  sl.registerSingleton<MainLocalSource>(
+      MainLocalSourceImpl(await Hive.openBox("main")));
 
   sl.registerSingleton<MainRepository>(MainRepositoryImpl(sl(), sl()));
 
   sl.registerSingleton(GetHomes(sl()));
   sl.registerSingleton(AddHome(sl()));
   sl.registerSingleton(UpdateHome(sl()));
-
+  sl.registerSingleton(AddDoor(sl()));
   sl.registerFactory(() => MainBloc(sl()));
 }

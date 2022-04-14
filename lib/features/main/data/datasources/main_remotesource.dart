@@ -18,6 +18,8 @@ abstract class MainRemoteSource {
       required int buttonMode});
 
   Future<APIResultModel> editHome({required Home home});
+
+  Future<APIResultModel> addDoor({required String homeId, required String doorLabel, required int buttonMode});
   Future<APIResultModel> editDoor({required Door door});
 }
 
@@ -97,6 +99,20 @@ class MainRemoteSourceImpl implements MainRemoteSource {
   Future<APIResultModel> editDoor({required Door door}) {
     // TODO: implement editDoor
     throw UnimplementedError();
+  }
+
+  @override
+  Future<APIResultModel> addDoor({required String homeId, required String doorLabel, required int buttonMode}) async {
+    var response = await _dio.post('homes/$homeId/doors',data: {
+      "label": doorLabel,
+      "button_mode": buttonMode
+    });
+
+    if (response.statusCode == 200) {
+      return APIResultModel.fromJson(response.data);
+    }else{
+      throw APIException.from(response);
+    }
   }
 
 }

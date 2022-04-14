@@ -6,6 +6,7 @@ import 'package:tialink/features/main/domain/entities/main_entities.dart';
 import 'package:tialink/features/main/domain/entities/api_entity.dart';
 import 'package:tialink/core/exceptions/api_exceptions.dart';
 import 'package:dartz/dartz.dart';
+import 'package:tialink/features/main/domain/usecases/main_usecase.dart';
 
 import '../../domain/repositories/main_repository.dart';
 
@@ -91,6 +92,15 @@ class MainRepositoryImpl implements MainRepository {
     try{
       return left(await _remoteSource.editHome(home: home));
     }on APIException catch(e) {
+      return right(e);
+    }
+  }
+
+  @override
+  Future<Either<APIResult, APIException>> addDoor(AddDoorParam param) async {
+    try {
+      return left(await _remoteSource.addDoor(homeId: param.homeId, doorLabel: param.doorLabel, buttonMode: param.doorButtonMode));
+    }on APIException catch(e){
       return right(e);
     }
   }

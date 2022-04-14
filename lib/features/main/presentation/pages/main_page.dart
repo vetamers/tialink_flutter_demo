@@ -86,9 +86,9 @@ class _MainPageState extends State<MainPage> {
                       TextButton(
                           onPressed: () {
                             ScaffoldMessenger.of(context).clearMaterialBanners();
-                            context
-                                .read<BluetoothBloc>()
-                                .add(BluetoothFindDeviceEvent(FindDeviceParam.byName("meta")));
+                            context.read<BluetoothBloc>().add(
+                                BluetoothFindDeviceEvent(
+                                    FindDeviceParam.byName("meta")));
                           },
                           child: const Text("Reconnect"))
                     ]));
@@ -156,6 +156,16 @@ class _MainPageState extends State<MainPage> {
                                   builder: (context) {
                                     return Wrap(children: [
                                       ListTile(
+                                        leading: const Icon(Icons.add),
+                                        title: const Text("Add Door"),
+                                        onTap: () {
+                                          Navigator.popAndPushNamed(context, "/add",
+                                              arguments: BluetoothDeviceSetupArgs(
+                                                  SetupMode.onlyDoor,
+                                                  {"home": homes[index]}));
+                                        },
+                                      ),
+                                      ListTile(
                                         leading: const Icon(Icons.edit),
                                         title: const Text("Edit"),
                                         onTap: () {
@@ -189,7 +199,7 @@ class _MainPageState extends State<MainPage> {
                     ),
                     SizedBox(
                         height: 200,
-                        child: _doorList(homes[index].doors, homes[index]))
+                        child: _doorList(homes[index].doors.reversed.toList(), homes[index]))
                   ],
                 ),
               ),

@@ -27,7 +27,8 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
 
   plugin.BluetoothDevice? device;
 
-  BluetoothBloc(this._serial, this.findDeviceByName, this.findDeviceByAddress, this.executeCommand)
+  BluetoothBloc(this._serial, this.findDeviceByName, this.findDeviceByAddress,
+      this.executeCommand)
       : super(BluetoothState.initial()) {
     _checkIsBluetoothEnable();
 
@@ -53,7 +54,7 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
     on<BluetoothFindDeviceEvent>(_findDevice);
     on<BluetoothConnectEvent>(_connect);
 
-    on<BluetoothExecuteRemoteEvent>(_executeRemote,transformer: droppable());
+    on<BluetoothExecuteRemoteEvent>(_executeRemote, transformer: droppable());
   }
 
   void _findDevice(
@@ -114,12 +115,12 @@ class BluetoothBloc extends Bloc<BluetoothEvent, BluetoothState> {
     }
   }
 
-  void _executeRemote(BluetoothExecuteRemoteEvent event, Emitter<BluetoothState> emit) async {
+  void _executeRemote(
+      BluetoothExecuteRemoteEvent event, Emitter<BluetoothState> emit) async {
     var transferProtocol = TransferProtocol.executeButton(
         event.button,
-        event.home.doors.indexOf(event.door) + 1,
-        event.home.device.secret
-    );
+        event.home.doors.reversed.toList().indexOf(event.door) + 1,
+        event.home.device.secret);
 
     await executeCommand(ExecuteCommandParam(transferProtocol));
   }

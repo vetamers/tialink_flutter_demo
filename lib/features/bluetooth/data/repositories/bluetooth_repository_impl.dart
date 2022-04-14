@@ -68,7 +68,8 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
 
   @override
   Stream<RemoteSetupState> setupNewRemote(int buttonMode, int remoteNumber) async* {
-    var secret = randomInt(8);
+    var secret = remoteNumber == 1 ? randomInt(8).toString() : null;
+
     await _remoteDataSource!.sendBytes(
         TransferProtocol.newRemoteSetupMessage(buttonMode, remoteNumber).binary);
 
@@ -76,31 +77,35 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
       var expectedMessage =
           TransferProtocol.successfulMessage(RemoteButton.values[i - 1]).message;
       yield RemoteSetupState(
-          buttonMode, i, secret.toString(), RemoteSetupStatus.waitingForAction);
+          buttonMode, i, secret, RemoteSetupStatus.waitingForAction);
       var bytes = await _remoteDataSource!.readBytes(expectedMessage.length);
       var message = TransferProtocol.binaryToString(bytes);
 
       if (message == expectedMessage) {
         yield RemoteSetupState(
-            buttonMode, i, secret.toString(), RemoteSetupStatus.signalReceived);
+            buttonMode, i, secret, RemoteSetupStatus.signalReceived);
         await Future.delayed(const Duration(seconds: 1));
       } else {
         throw BluetoothUnExpectedMessage(expectedMessage, message);
       }
     }
 
-    await _remoteDataSource!.sendBytes(TransferProtocol.uniqueKey(secret).binary);
+    if (remoteNumber == 1) {
+      await _remoteDataSource!.sendBytes(TransferProtocol.uniqueKey(secret!).binary);
+    }
+      
     yield RemoteSetupState(
         buttonMode, buttonMode, secret.toString(), RemoteSetupStatus.operationDone);
   }
 
   @override
-  Future<Either<void, BluetoothSendBytesException>> sendCommand(TransferProtocol transferProtocol) async {
+  Future<Either<void, BluetoothSendBytesException>> sendCommand(
+      TransferProtocol transferProtocol) async {
     assert(_remoteDataSource != null);
 
     try {
       return left(_remoteDataSource!.sendBytes(transferProtocol.binary));
-    }catch (e) {
+    } catch (e) {
       return right(BluetoothSendBytesException(transferProtocol));
     }
   }

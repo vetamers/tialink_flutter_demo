@@ -101,3 +101,28 @@ class UpdateHome extends UseCase<APIResult,APIException,UpdateHomeParam> {
   }
 
 }
+
+class AddDoorParam extends UseCaseParam {
+  final String homeId;
+  final String doorLabel;
+  final int doorButtonMode;
+
+  AddDoorParam(this.homeId, this.doorLabel, this.doorButtonMode);
+
+  @override
+  Map<String, dynamic> get fields => {};
+
+  @override
+  List<Object?> get props => [homeId,doorLabel,doorButtonMode];
+}
+
+class AddDoor extends UseCase<APIResult,APIException,AddDoorParam> {
+  final MainRepository _repository;
+
+  AddDoor(this._repository);
+
+  @override
+  Future<Either<APIResult, APIException>> call(AddDoorParam param) {
+    return _repository.addDoor(param);
+  }
+}

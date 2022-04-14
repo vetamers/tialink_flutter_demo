@@ -14,8 +14,15 @@ import '../../domain/entities/bluetooth_entities.dart';
 import '../bloc/bluetooth_bloc.dart';
 
 class RemoteConfigView extends StatefulWidget {
-  final void Function(AddHomeParam param) onDone;
-  const RemoteConfigView({Key? key, required this.onDone}) : super(key: key);
+  final bool isDoorOnly;
+  final int remoteNumber;
+  final void Function(dynamic param) onDone;
+  const RemoteConfigView(
+      {Key? key,
+      this.isDoorOnly = false,
+      this.remoteNumber = 1,
+      required this.onDone})
+      : super(key: key);
 
   @override
   _RemoteConfigViewState createState() => _RemoteConfigViewState();
@@ -40,7 +47,8 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
       return _selectConfig();
     } else if (!configDone) {
       return StreamBuilder(
-        stream: GetIt.I<BluetoothRepository>().setupNewRemote(buttonMode!, 1),
+        stream: GetIt.I<BluetoothRepository>()
+            .setupNewRemote(buttonMode!, widget.remoteNumber),
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
@@ -94,7 +102,9 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
             "Setup is almost complete.",
             style: TextStyle(fontSize: 20),
           ),
-          const Text("The last step you should set label for your home"),
+          Text(!widget.isDoorOnly
+              ? "The last step you should set label for your home"
+              : "The last step you should set label for your door"),
           const SizedBox(
             height: 15,
           ),
@@ -102,8 +112,11 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
             key: _form,
             child: TextFormField(
                 key: _labelField,
-                decoration: const InputDecoration(
-                    border: OutlineInputBorder(), label: Text("Home label"), prefixIcon: Icon(Icons.home)),
+                decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    label: Text(!widget.isDoorOnly ? "Home label" : "Door label"),
+                    prefixIcon: Icon(
+                        !widget.isDoorOnly ? Icons.home : Icons.door_front_door)),
                 maxLength: 32,
                 maxLines: 1,
                 validator: (s) {
@@ -120,9 +133,17 @@ class _RemoteConfigViewState extends State<RemoteConfigView> {
             child: FloatingActionButton.extended(
               onPressed: () {
                 if (_form.currentState!.validate()) {
-                  var deviceMac = context.read<BluetoothBloc>().device!.address;
-                  var param = AddHomeParam.full(_labelField.currentState!.value, deviceMac , secret!, "Main", buttonMode!);
-                  widget.onDone(param);
+                  if (widget.isDoorOnly) {
+                    widget.onDone({
+                      "mode": buttonMode!,
+                      "label": _labelField.currentState!.value
+                    });
+                  } else {
+                    var deviceMac = context.read<BluetoothBloc>().device!.address;
+                    var param = AddHomeParam.full(_labelField.currentState!.value,
+                        deviceMac, secret!, "Main", buttonMode!);
+                    widget.onDone(param);
+                  }
                 }
               },
               label: const Text("Done"),

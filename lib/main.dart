@@ -7,6 +7,7 @@ import 'package:tialink/core/bloc_observer.dart';
 import 'package:tialink/features/auth/presentation/bloc/phone_auth_bloc.dart';
 import 'package:tialink/features/auth/presentation/pages/auth_page.dart';
 import 'package:tialink/features/auth/presentation/pages/phone_verification_page.dart';
+import 'package:tialink/features/bluetooth/domain/entities/bluetooth_entities.dart';
 import 'package:tialink/features/bluetooth/presentation/pages/bluetooth_device_setup_page.dart';
 import 'package:tialink/features/main/domain/usecases/main_usecase.dart';
 import 'package:tialink/features/main/presentation/bloc/main_bloc.dart';
@@ -36,7 +37,7 @@ class _TiaLinkAppState extends State<TiaLinkApp> {
   Widget build(BuildContext context) {
     var box = GetIt.I<Box>(instanceName: "app_box");
 
-    return BlocProvider(
+     return BlocProvider(
       create: (context) => GetIt.I<BluetoothBloc>(),
       child: MaterialApp(
         title: "Tialink",
@@ -45,13 +46,24 @@ class _TiaLinkAppState extends State<TiaLinkApp> {
         initialRoute: _getInitialRoute(box),
         routes: {
           "/": (_) => BlocProvider(
-            create: (_) => GetIt.I<MainBloc>(),
-            child: const MainPage(),
-          ),
+                create: (_) => GetIt.I<MainBloc>(),
+                child: const MainPage(),
+              ),
           "/edit": (_) => BlocProvider(
-            create: (_) => GetIt.I<MainBloc>(),
-            child: const HomeEditPage(),
-          ),
+                create: (_) => GetIt.I<MainBloc>(),
+                child: const HomeEditPage(),
+              ),
+          "/add": (_) => MultiBlocProvider(
+                providers: [
+                  BlocProvider(
+                    create: (context) => context.read<BluetoothBloc>(),
+                  ),
+                  BlocProvider(
+                    create: (context) => context.read<MainBloc>(),
+                  ),
+                ],
+                child: const DeviceSetupPage(),
+              ),
           "welcome": (_) => Provider(
                 create: (_) => box,
                 child: WelcomePage(),
@@ -64,9 +76,10 @@ class _TiaLinkAppState extends State<TiaLinkApp> {
                 create: (_) => GetIt.I<PhoneAuthBloc>(),
                 child: const PhoneVerificationPage(),
               ),
-          "setup": (context) => MultiProvider(
-              providers: [Provider(create: (_) => box), Provider(create: (_) => GetIt.I<AddHome>())],
-              child: const DeviceSetupPage())
+          "setup": (context) => MultiProvider(providers: [
+                Provider(create: (_) => box),
+                Provider(create: (_) => GetIt.I<AddHome>())
+              ], child: const DeviceSetupPage(args: BluetoothDeviceSetupArgs(SetupMode.all)))
         },
       ),
     );
